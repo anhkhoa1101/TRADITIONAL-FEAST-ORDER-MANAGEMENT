@@ -1,6 +1,8 @@
 package Utilities;
 
 import Utilities.Validation.BaseValidation;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 import java.util.Scanner;
 
@@ -8,7 +10,7 @@ public class Inputter {
     private Scanner scanner;
 
     public Inputter(){
-        this.scanner = new Scanner(System.in);
+        this.scanner = new Scanner(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     }
 
     public String getString(String mess){
@@ -36,16 +38,24 @@ public class Inputter {
         return result;
     }
 // Ví dụ: inputAndLoop ("CustomerID: ", Acceptable.CUS_ID_VALID, loop)
-    public String inputAndLoop(String mess, String pattern, boolean loop){
-        String result = "";
-        result = getString(mess);
-        boolean more = true;
-        do {
-            more = !BaseValidation.isValid(result, pattern);
-            if (more && (loop && result.length() > 0)) {
-                System.out.println("Data is valid !. Re-enter");
+public String inputAndLoop(String mess, String pattern, boolean loop) {
+    String result;
+
+    do {
+        result = getString(mess).trim();
+
+        if (!BaseValidation.isValid(result, pattern)) {
+            if (loop) {
+                System.out.println("Data is invalid! Re-enter.");
+            } else {
+                return result;
             }
-        } while (loop & more);
-        return result.trim();
-    }
+        } else {
+            return result;
+        }
+
+    } while (loop);
+
+    return result;
+}
 }

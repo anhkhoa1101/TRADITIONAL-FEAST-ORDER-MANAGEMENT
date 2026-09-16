@@ -36,14 +36,14 @@ public class Menu {
             showMenu();
             choice = in.getInt("Chọn chức năng: ", "^\\d+$");
             switch (choice) {
-                case 1 : registerCustomer();
-                case 2 : updateCustomerInfo();
-                case 3 : searchCustomerByName();
-                case 4 : displayFeastMenus();
-                case 5 : placeOrder();
-                case 6 : updateOrderInfo();
-                case 7 : saveData();
-                case 8 : displayLists();
+                case 1 : registerCustomer(); break;
+                case 2 : updateCustomerInfo(); break;
+                case 3 : searchCustomerByName(); break;
+                case 4 : displayFeastMenus(); break;
+                case 5 : placeOrder(); break;
+                case 6 : updateOrderInfo(); break;
+                case 7 : saveData(); break;
+                case 8 : displayLists(); break;
                 case 0 : System.out.println("Tạm biệt!");
                 default : System.out.println("Lựa chọn không hợp lệ!");
             }
@@ -74,6 +74,7 @@ public class Menu {
 
         boolean ok = customerList.addCustomer(new Customer(id, name, phone, email));
         System.out.println(ok ? "Đăng ký thành công!" : "Đăng ký thất bại!");
+        System.out.println("INPUT = " + name);
     }
 
     // ----- Chức năng 2 -----

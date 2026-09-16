@@ -3,14 +3,14 @@ package DataObjects;
 import Core.Entities.Order;
 import Core.Interfaces.IOrderDAO;
 import Utilities.FileIO.FileHelper;
-
+import Utilities.FileIO.IFileIO;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDAO implements IOrderDAO {
 
     private static final String FILE_NAME = "src/DataObjects/data/orders.dat";
-    private final FileHelper<Order> fileIO;
+    private final IFileIO<Order> fileIO;
     private List<Order> orderList;
 
     public OrderDAO() {

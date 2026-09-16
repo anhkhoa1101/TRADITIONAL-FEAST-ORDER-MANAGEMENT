@@ -3,14 +3,14 @@ package DataObjects;
 import Core.Entities.Customer;
 import Core.Interfaces.ICustomerDAO;
 import Utilities.FileIO.FileHelper;
-
+import Utilities.FileIO.IFileIO;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerDAO implements ICustomerDAO {
 
     private static final String FILE_NAME = "src/DataObjects/data/customers.dat";
-    private final FileHelper<Customer> fileIO;
+    private final IFileIO<Customer> fileIO;
     private List<Customer> customerList;
 
     public CustomerDAO() {

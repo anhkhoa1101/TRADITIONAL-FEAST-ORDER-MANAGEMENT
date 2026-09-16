@@ -1,57 +1,51 @@
 package Utilities.FileIO;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import Presentation.Menu;
 
 import Core.Entities.SetMenu;
-/**
- *
- * @author NguyenPhuc
- */
+
 public class MenuFileHelper implements IFileIO<SetMenu> {
 
-    private final String FILE_NAME = "src\\fileio\\FeastMenu.csv";
+    private final String filePath;
+
+    // Constructor nhận đường dẫn -> DAO giữ quyền định nghĩa path (single source of truth)
+    public MenuFileHelper(String filePath) {
+        this.filePath = filePath;
+    }
 
     @Override
     public List<SetMenu> readFromFile() throws Exception {
         List<SetMenu> list = new ArrayList<>();
-        File f;
-        FileInputStream file = null;
-        BufferedReader myInput = null;// create Buffer
-        try {
-            f = new File(FILE_NAME);//open file
-            String fullPath = f.getAbsolutePath(); //get Fullpath of file
-            file = new FileInputStream(fullPath);
-            myInput = new BufferedReader(new InputStreamReader(file));
-            // read line until the end of the file
-            String line = null;
+        File f = new File(filePath);
+        if (!f.exists()) {
+            return list;                       // chưa có file -> rỗng, không ném lỗi
+        }
+        try (FileInputStream file = new FileInputStream(f);
+             BufferedReader myInput = new BufferedReader(
+                     new InputStreamReader(file, StandardCharsets.UTF_8))) {
+
+            String line;
             boolean first = true;
             while ((line = myInput.readLine()) != null) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                if (first) {
+                if (line.trim().isEmpty()) continue;
+                if (first) {                   // bỏ dòng header "Code,Name,Price,Ingredients"
                     first = false;
                     continue;
                 }
-                SetMenu item = convertToMenu(line);
-                list.add(item);
-            }
-
-        } catch (IOException ex) {
-            throw ex;
-        } finally {
-            if (myInput != null) {
-                myInput.close();
-            }
-            if (file != null) {
-                file.close();
+                if (line.startsWith("\uFEFF")) {        // strip BOM nếu có
+                    line = line.substring(1);
+                }
+                list.add(convertToMenu(line));
             }
         }
         return list;
@@ -59,19 +53,29 @@ public class MenuFileHelper implements IFileIO<SetMenu> {
 
     @Override
     public boolean saveToFile(List<SetMenu> list) throws Exception {
-
-        return true;
+        File f = new File(filePath);
+        try (FileOutputStream fos = new FileOutputStream(f);
+             BufferedWriter bw = new BufferedWriter(
+                     new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
+            bw.write("Code,Name,Price,Ingredients");
+            bw.newLine();
+            for (SetMenu s : list) {
+                bw.write(s.getMenuID() + "," + s.getMenuName() + ","
+                        + s.getPrice() + "," + s.getIngredients());
+                bw.newLine();
+            }
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
     }
 
     private SetMenu convertToMenu(String str) {
-        SetMenu item = null;
-
-        String[] p = str.split(",");
+        String[] p = str.split(",", -1);
         String code = p[0].trim();
         String name = p[1].trim();
         double price = Double.parseDouble(p[2].trim());
-        String ingredients = p[3].trim();
-        item = new SetMenu(code, name, price, ingredients);
-        return item;
+        String ingredients = p.length > 3 ? p[3].trim() : "";
+        return new SetMenu(code, name, price, ingredients);
     }
 }
