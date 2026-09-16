@@ -9,7 +9,7 @@ import java.util.List;
 
 public class SetMenuDAO implements ISetMenuDAO {
 
-    private static final String FILE_NAME = "src/DataObjects/data/setmenus.dat";
+    private static final String FILE_NAME = "src/DataObjects/data/FeastMenu.csv";
     private final FileHelper<SetMenu> fileIO;
     private List<SetMenu> menuList;
 
