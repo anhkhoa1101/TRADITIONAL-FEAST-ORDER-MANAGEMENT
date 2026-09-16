@@ -1,280 +1,316 @@
-# TRADITIONAL FEAST ORDER MANAGEMENT (Dự án LAB1)
+# THIẾT KẾ HỆ THỐNG — TRADITIONAL FEAST ORDER MANAGEMENT
 
-Quản lý đặt tiệc cưới/tiệc truyền thống: quản lý khách hàng, set menu (thực đơn
-tiệc), và đơn đặt tiệc. Dự án được xây dựng bằng Java (NetBeans), lưu trữ dữ liệu
-dưới dạng file nhị phân (`.dat`) thông qua cơ chế Serialization.
-
-Tác giả: khoa0
+> Dự án quản lý đặt tiệc (Java console, NetBeans/Ant). Tài liệu này phân tích trực tiếp từ
+> source code hiện có, theo 3 mục: Entity → Attribute → Class → Fields, Design Pattern
+> (4 tầng), và Sequence Diagram (luồng xử lý — class nào, method nào).
 
 ---
 
-## 1. ENTITY -> ATTRIBUTE -> CLASS -> FIELDS
+## 1. ENTITY → ATTRIBUTE → CLASS → FIELDS
 
-Dự án có 3 thực thể (Entity) cốt lõi, đặt trong package `Core.Entities`. Mỗi entity
-là một lớp Java biểu diễn một bảng/đối tượng dữ liệu, có các thuộc tính (Attribute)
-tương ứng với các trường (Fields) private kèm theo getter/setter.
+Package chứa entity: `Core.Entities`. Cả 3 lớp đều implement `Serializable`
+(bắt buộc vì dữ liệu được ghi xuống file nhị phân bằng `ObjectOutputStream`).
 
-### 1.1. Entity: Customer (Khách hàng)
-- Class: `Core.Entities.Customer` (implements `Serializable`)
-- Fields:
-  | Field      | Kiểu dữ liệu | Mô tả                |
-  |------------|--------------|----------------------|
-  | id         | String       | Mã khách hàng (VD: C0001) |
-  | name       | String       | Tên khách hàng       |
-  | phone      | String       | Số điện thoại (10 số) |
-  | email      | String       | Email                |
-- Constructor: `Customer()`, `Customer(id, name, phone, email)`
+### 1.1. Customer (Khách hàng)
 
-### 1.2. Entity: SetMenu (Thực đơn tiệc / Set menu)
-- Class: `Core.Entities.SetMenu` (implements `Serializable`)
-- Fields:
-  | Field       | Kiểu dữ liệu | Mô tả                |
-  |-------------|--------------|----------------------|
-  | menuID      | String       | Mã set menu (VD: M01) |
-  | menuName    | String       | Tên món tiệc         |
-  | price       | double       | Giá tiền (>= 0)      |
-  | ingredients | String       | Nguyên liệu          |
-- Constructor: `SetMenu()`, `SetMenu(menuID, menuName, price, ingredients)`
+`Core.Entities.Customer`
 
-### 1.3. Entity: Order (Đơn đặt tiệc)
-- Class: `Core.Entities.Order` (implements `Serializable`)
-- Fields:
-  | Field       | Kiểu dữ liệu | Mô tả                                    |
-  |-------------|--------------|------------------------------------------|
-  | orderCode   | String       | Mã đơn (tự sinh: yyyymmddhhmmss)         |
-  | customerID  | Customer     | Khách hàng (object nhúng, lấy id để so)  |
-  | province    | String       | Tỉnh/thành tổ chức tiệc                  |
-  | menuID      | SetMenu      | Set menu được đặt (object nhúng)          |
-  | numOfTables | int          | Số bàn (phải > 0)                        |
-  | eventDate   | Date         | Ngày tổ chức                             |
-- Method riêng: `generateOrderCode()` — tự sinh mã đơn từ thời gian hiện tại.
-- Constructor:
-  - `Order()` — sinh mã đơn, gán ngày hiện tại, menu/customer = null.
-  - `Order(orderCode, customerID, province, menuID, numOfTables, eventDate)` — luôn
-    gọi `generateOrderCode()` để sinh mã (orderCode truyền vào bị bỏ qua).
+| Field   | Kiểu   | Mô tả              |
+|---------|--------|--------------------|
+| `id`    | String | Mã khách hàng (VD: C0001) |
+| `name`  | String | Tên khách hàng     |
+| `phone` | String | Số điện thoại (10 số) |
+| `email` | String | Email              |
+
+Constructor: `Customer()`, `Customer(String id, String name, String phone, String email)`.
+Có đầy đủ getter/setter cho từng field và `toString()` override.
+
+### 1.2. SetMenu (Set menu / thực đơn tiệc)
+
+`Core.Entities.SetMenu`
+
+| Field         | Kiểu   | Mô tả                 |
+|---------------|--------|-----------------------|
+| `menuID`      | String | Mã set menu (VD: M01) |
+| `menuName`    | String | Tên món tiệc          |
+| `price`       | double | Giá tiền              |
+| `ingredients` | String | Nguyên liệu           |
+
+Constructor: `SetMenu()`, `SetMenu(String menuID, String menuName, double price, String ingredients)`.
+
+### 1.3. Order (Đơn đặt tiệc)
+
+`Core.Entities.Order`
+
+| Field         | Kiểu     | Mô tả                                             |
+|---------------|----------|----------------------------------------------------|
+| `orderCode`   | String   | Mã đơn, tự sinh theo pattern `yyyymmddhhmmss`      |
+| `customerID`  | Customer | Object khách hàng nhúng trực tiếp (không phải chỉ String ID) |
+| `province`    | String   | Tỉnh/thành tổ chức tiệc                            |
+| `menuID`      | SetMenu  | Object set menu nhúng trực tiếp                    |
+| `numOfTables` | int      | Số bàn                                             |
+| `eventDate`   | Date     | Ngày tổ chức                                       |
+
+Method riêng: `generateOrderCode()` (private) — sinh mã đơn từ `new Date()` qua
+`SimpleDateFormat("yyyymmddhhmmss")`.
+
+Constructor:
+- `Order()` → tự gọi `generateOrderCode()`, `menuID = null`, `customerID = null`, `eventDate = new Date()`.
+- `Order(orderCode, customerID, province, menuID, numOfTables, eventDate)` → **tham số
+  `orderCode` truyền vào bị bỏ qua**, constructor luôn gọi lại `generateOrderCode()` để
+  tự sinh mã mới.
 
 ### 1.4. Quan hệ giữa các Entity
-- `Order` có quan hệ "chứa" (composition/embed) với `Customer` và `SetMenu` dưới
-  dạng object (chứ không phải chỉ lưu String ID). Khi thêm đơn, hệ thống sẽ lấy
-  object thật từ `CustomerList` / `SetMenuList` để gán lại vào Order, tránh trường
-  hợp Order chỉ chứa object "rỗng" (chỉ có mã).
+
+`Order` **chứa (composition)** `Customer` và `SetMenu` dưới dạng object thật (nhờ cả
+hai đều implement `Serializable`), chứ không chỉ lưu String ID. Khi thêm đơn,
+`OrderList.addOrder()` sẽ lấy lại object thật từ `CustomerList`/`SetMenuList` và gán đè
+vào `Order` để tránh trường hợp Order chứa object "rỗng" (chỉ có mã, không có dữ liệu).
 
 ---
 
-## 2. DESIGN PATTERN (Các mẫu thiết kế & phân lớp)
+## 2. DESIGN PATTERN — PHÂN TẦNG TRÁCH NHIỆM
 
-Dự án tách biệt rõ ràng 4 nhóm trách nhiệm (separation of concerns):
+Kiến trúc chia 4 nhóm theo chiều dữ liệu đi từ giao diện xuống file, cộng với tầng
+Presentation ở trên cùng (không tính là 1 trong 4 nhóm core nhưng là entry point).
 
-### 2.1. STORE ENTITY (Lưu trữ thực thể) — package `Core`
-Là nơi định nghĩa "hình dáng" dữ liệu và các hợp đồng (interface) mà không chứa
-logic xử lý.
-
-- `Core.Entities` — các lớp thực thể: `Customer`, `Order`, `SetMenu`.
-- `Core.Interfaces` — các interface định nghĩa hành vi:
-  - `IBaseDAO<E>` — interface generic chung cho mọi DAO:
-    `readAll()`, `writeAll(List<E>)`, `add(E)`, `update(E)`, `delete(String)`,
-    `findByID(String)`.
-  - `ICustomerDAO` / `IOrderDAO` / `ISetMenuDAO` — kế thừa `IBaseDAO`, mở rộng thêm
-    các hàm riêng (VD: `findByName`, `findByCustomerID`).
-  - `Validation`, `Workable` — các interface/abstract hỗ trợ validate &行为.
-
-**Mục đích:** định nghĩa entity + hợp đồng, giúp các lớp trên tách rời khỏi cách
-thực thi cụ thể (Dependency Inversion).
-
-### 2.2. CONTROL (RAM — quản lý bộ nhớ & nghiệp vụ) — package `BusinessObject`
-Đóng vai trò "Service / Business Layer". Giữ danh sách đối tượng trong RAM thông
-qua các DAO, thực hiện validate và xử lý logic nghiệp vụ (tìm kiếm, lọc, tính toán,
-kiểm tra tồn tại), nhưng KHÔNG tự đọc/ghi file.
-
-- `CustomerList`
-  - Field: `ICustomerDAO customerDAO` (interface -> đảo ngược phụ thuộc).
-  - Methods: `addCustomer(Customer)`, `updateCustomer(Customer)`,
-    `deleteCustomer(String)`, `searchByName(String)`, `getAllCustomers()`,
-    `findCustomer(String)`, `isExist(String)`.
-- `SetMenuList`
-  - Field: `ISetMenuDAO setMenuDAO`.
-  - Methods: `addSetMenu`, `updateSetMenu`, `deleteSetMenu`, `getAllSetMenus`,
-    `findByID`, `isExist`.
-- `OrderList`
-  - Fields: `IOrderDAO orderDAO`, `CustomerList customerList`, `SetMenuList setMenuList`
-    (compose 2 list kia để kiểm tra khách/menu có thực sự tồn tại).
-  - Methods: `addOrder(Order)` (kiểm tra customer & menu tồn tại, số bàn > 0),
-    `updateOrder`, `deleteOrder`, `getAllOrders`, `findOrder`, `isExist`,
-    `getOrdersByCustomer`, `getTotalRevenue()` (tổng doanh thu = price * numOfTables).
-
-**Pattern áp dụng:** Service / Business Layer + Dependency Inversion (gọi qua
-interface DAO thay vì lớp cụ thể).
-
-### 2.3. SAVE (FILE — lưu trữ file) — package `DataObjects`
-Đóng vai trò "Data Access Object (DAO) Pattern". Chịu trách nhiệm đọc/ghi dữ liệu
-xuống file nhị phân, tách hoàn toàn logic truy cập dữ liệu ra khỏi logic nghiệp vụ
-(theo hướng phát triển ghi trong ghi chú dự án: không để BusinessObject đọc/ghi file
-trực tiếp).
-
-- `CustomerDAO` (implements `ICustomerDAO`)
-  - File: `src/DataObjects/data/customers.dat`
-  - Giữ `List<Customer> customerList` (nạp từ file khi khởi tạo), ghi lại file sau
-    mỗi `add/update/delete`.
-  - Methods: `readAll`, `writeAll`, `add`, `update`, `delete`, `findByID`,
-    `findByName`.
-- `OrderDAO` (implements `IOrderDAO`)
-  - File: `src/DataObjects/data/orders.dat`
-  - Methods tương tự + `findByCustomerID(String)`.
-- `SetMenuDAO` (implements `ISetMenuDAO`)
-  - File: `src/DataObjects/data/setmenus.dat`
-  - Methods: `readAll`, `writeAll`, `add`, `update`, `delete`, `findByID`.
-
-Cơ chế lưu file dùng **Serialization** (ObjectInputStream / ObjectOutputStream),
-đọc đến hết file bằng `EOFException`.
-
-### 2.4. UTILS (Tiện ích) — package `Utilities`
-Các lớp hỗ trợ dùng chung, không chứa nghiệp vụ:
-
-- `Utilities.FileIO`
-  - `IFileIO<E>` — interface đọc/ghi file generic.
-  - `FileHelper<E>` — lớp generic đọc/ghi danh sách object xuống file nhị phân:
-    `readFromFile()`, `saveToFile(List<E>)`.
-- `Utilities.Validation`
-  - `BaseValidation` — interface chứa các regex chuẩn (`INTEGER_VALID`,
-    `POSITIVE_INT_VALID`, `DOUBLE_VALID`, `POSITIVE_DOUBLE_VALID`) và hàm
-    `isValid(value, pattern)`.
-  - `CusValidation` — regex riêng cho khách hàng (`CUS_ID_VALID`, `NAME_VALID`,
-    `PHONE_VALID`).
-  - `OrderValidation` — regex cho đơn (`PROVINCE_VALID`, `NUM_TABLES_VALID`,
-    `DATE_VALID`).
-- `Utilities.Inputter` — lớp thu nhập dữ liệu từ bàn phím (`getString`,
-  `getInt`, `getDouble`, `inputAndLoop` — nhập và lặp lại nếu không khớp regex).
-
-### 2.5. PRESENTATION (Giao diện người dùng) — package `Presentation`
-- `Program` — lớp chứa `main()`, khởi tạo `Menu` và gọi `menu.run()`.
-- `Menu` — hiển thị menu dạng text, đọc input, gọi các BusinessObject tương ứng.
-  Các chức năng:
-  1. Register customers (đăng ký KH)
-  2. Update customer information
-  3. Search customer by name
-  4. Display feast menus
-  5. Place a feast order (đặt tiệc)
-  6. Update order information
-  7. Save data to file (thực tế dữ liệu đã lưu tự động sau mỗi thao tác)
-  8. Display Customer/Order lists
-  0. Quit
-
-### 2.6. Tóm tắt kiến trúc (luồng phân lớp)
 ```
-Presentation (Menu/Program)
-      |  gọi
-      v
-BusinessObject (CustomerList / OrderList / SetMenuList)   <-- CONTROL / RAM + logic
-      |  gọi qua interface DAO
-      v
-DataObjects (CustomerDAO / OrderDAO / SetMenuDAO)          <-- SAVE / FILE
-      |  dùng
-      v
-Utilities.FileIO.FileHelper  +  Core.Entities (Store Entity)
+Presentation (Menu / Program)
+        │  gọi
+        ▼
+BusinessObject  ── CONTROL (RAM) ── logic nghiệp vụ, validate
+        │  gọi qua interface DAO (Dependency Inversion)
+        ▼
+DataObjects     ── SAVE (FILE)  ── đọc/ghi file nhị phân
+        │  dùng
+        ▼
+Utilities.FileIO.FileHelper  +  Core.Entities  ── STORE ENTITY / UTILS
 ```
+
+### 2.1. STORE ENTITY — package `Core`
+
+Chỉ định nghĩa "hình dáng" dữ liệu và hợp đồng (interface), không chứa logic xử lý.
+
+- **`Core.Entities`**: `Customer`, `SetMenu`, `Order` — các entity ở mục 1.
+- **`Core.Interfaces`**:
+  - `IBaseDAO<E>` — interface generic dùng chung cho mọi DAO:
+    ```java
+    public interface IBaseDAO<E> {
+        List<E> readAll();
+        boolean writeAll(List<E> list);
+        boolean add(E item);
+        boolean update(E item);
+        boolean delete(String id);
+        E findByID(String id);
+    }
+    ```
+  - `ICustomerDAO extends IBaseDAO<Customer>` — thêm `findByName(String)`.
+  - `IOrderDAO extends IBaseDAO<Order>` — thêm `findByCustomerID(String)`.
+  - `ISetMenuDAO extends IBaseDAO<SetMenu>` — không mở rộng thêm method riêng.
+
+**Mục đích:** tách hợp đồng khỏi cách thực thi cụ thể → các tầng trên (BusinessObject)
+phụ thuộc vào interface (`ICustomerDAO`...) chứ không phụ thuộc trực tiếp vào
+`CustomerDAO` (Dependency Inversion Principle).
+
+### 2.2. CONTROL (RAM) — package `BusinessObject`
+
+Đóng vai trò "Service / Business Layer". Giữ list trong RAM thông qua DAO, validate và
+xử lý nghiệp vụ, **không tự đọc/ghi file**.
+
+| Class | Field DAO | Method chính |
+|---|---|---|
+| `CustomerList` | `ICustomerDAO customerDAO` | `addCustomer`, `updateCustomer`, `deleteCustomer`, `searchByName`, `getAllCustomers`, `findCustomer`, `isExist`, `isNullOrEmpty` (private) |
+| `SetMenuList` | `ISetMenuDAO setMenuDAO` | `addSetMenu`, `updateSetMenu`, `deleteSetMenu`, `getAllSetMenus`, `findByID`, `isExist`, `isNullOrEmpty` (private) |
+| `OrderList` | `IOrderDAO orderDAO` + compose thêm `CustomerList customerList`, `SetMenuList setMenuList` | `addOrder`, `updateOrder`, `deleteOrder`, `getAllOrders`, `findOrder`, `isExist`, `getOrdersByCustomer`, `getTotalRevenue` |
+
+Điểm đáng chú ý trong `OrderList.addOrder(Order o)`:
+1. Kiểm tra `o`, `customerID`, `menuID` không null.
+2. Kiểm tra `orderCode` chưa tồn tại (`isExist`).
+3. Gọi `customerList.findCustomer(o.getCustomerID().getId())` để lấy **customer thật** từ DB.
+4. Gọi `setMenuList.findByID(o.getMenuID().getMenuID())` để lấy **menu thật** từ DB.
+5. Kiểm tra `numOfTables > 0`.
+6. Gán đè `o.setCustomerID(realCustomer)`, `o.setMenuID(realMenu)`.
+7. Gọi `orderDAO.add(o)`.
+
+`getTotalRevenue()` dùng Stream API:
+```java
+return orderDAO.readAll().stream()
+        .filter(o -> o.getMenuID() != null)
+        .mapToDouble(o -> o.getMenuID().getPrice() * o.getNumOfTables())
+        .sum();
+```
+
+**Pattern áp dụng:** Service/Business Layer + Dependency Inversion (gọi qua interface
+DAO thay vì gọi thẳng lớp cụ thể).
+
+### 2.3. SAVE (FILE) — package `DataObjects`
+
+Đóng vai trò Data Access Object (DAO) Pattern — tách toàn bộ logic đọc/ghi file khỏi
+logic nghiệp vụ.
+
+| Class | Implements | File dữ liệu |
+|---|---|---|
+| `CustomerDAO` | `ICustomerDAO` | `src/DataObjects/data/customers.dat` |
+| `OrderDAO` | `IOrderDAO` | `src/DataObjects/data/orders.dat` |
+| `SetMenuDAO` | `ISetMenuDAO` | `src/DataObjects/data/setmenus.dat` |
+
+Cả 3 class có cùng cấu trúc:
+- Constructor tạo `FileHelper<E>` và load `readAll()` ngay vào field `List<E>` trong RAM.
+- `add/update/delete` thao tác trên list trong RAM rồi gọi `writeAll(list)` để ghi lại
+  toàn bộ xuống file ngay lập tức (persist tự động sau mỗi thao tác).
+- `readAll()`/`writeAll()` bọc try/catch quanh `FileHelper`, in lỗi ra console nếu có
+  exception thay vì throw tiếp.
+- `findByID` dùng Stream `.filter(...).findFirst().orElse(null)`.
+
+Cơ chế lưu file: **Serialization** qua `ObjectInputStream`/`ObjectOutputStream`, đọc
+đến hết bằng cách bắt `EOFException` làm điều kiện dừng vòng lặp.
+
+### 2.4. UTILS — package `Utilities`
+
+Các lớp hỗ trợ dùng chung, không chứa nghiệp vụ.
+
+- **`Utilities.FileIO`**
+  - `IFileIO<E>` — interface generic: `readFromFile()`, `saveToFile(List<E>)`.
+  - `FileHelper<E> implements IFileIO<E>` — đọc/ghi nhị phân thật sự (xem 2.3).
+- **`Utilities.Validation`**
+  - `BaseValidation` — interface chứa regex dùng chung + hàm static:
+    ```java
+    String INTEGER_VALID = "^\\d+$";
+    String POSITIVE_INT_VALID = "^[1-9]\\d*$";
+    String DOUBLE_VALID = "^\\d+(\\.\\d+)?$";
+    String POSITIVE_DOUBLE_VALID = "^[1-9]\\d*(\\.\\d+)?$";
+    static boolean isValid(String value, String pattern) { ... }
+    ```
+  - `CusValidation extends BaseValidation` — `CUS_ID_VALID`, `NAME_VALID`, `PHONE_VALID`.
+  - `OrderValidation extends BaseValidation` — `PROVINCE_VALID`, `NUM_TABLES_VALID`, `DATE_VALID`.
+- **`Utilities.Inputter`** — thu nhập dữ liệu từ bàn phím qua `Scanner`:
+  `getString(mess)`, `getInt(mess, pattern)`, `getDouble(mess, pattern)`,
+  `inputAndLoop(mess, pattern, loop)` (nhập lặp lại tới khi khớp regex, nếu `loop=true`).
+
+### 2.5. Presentation (không thuộc 4 nhóm core, là entry point)
+
+- `Program` — chứa `main()`, khởi tạo `Menu` và gọi `menu.run()`.
+- `Menu` — vòng lặp hiển thị menu text, đọc lựa chọn, gọi vào `CustomerList`/
+  `OrderList`/`SetMenuList` tương ứng. 8 chức năng + thoát (0).
 
 ---
 
-## 3. SEQUENCE DIAGRAM (Luồng xử lý — Class nào, Phương thức nào)
+## 3. SEQUENCE DIAGRAM — LUỒNG XỬ LÝ (CLASS NÀO, METHOD NÀO)
 
-Dưới đây là 2 luồng xử lý tiêu biểu mô tả tuần tự các class và method được gọi.
+### 3.1. Luồng: Đăng ký khách hàng (chức năng 1 — `registerCustomer`)
 
-### 3.1. Luồng: Đăng ký khách hàng (Chức năng 1)
+```mermaid
+sequenceDiagram
+    actor User
+    participant Menu
+    participant Inputter
+    participant CustomerList
+    participant CustomerDAO
+    participant FileHelper
 
+    User->>Menu: chọn "1. Register customers"
+    Menu->>Inputter: inputAndLoop() x3 (id, name, phone)
+    Menu->>Inputter: getString() (email)
+    Menu->>CustomerList: addCustomer(new Customer(...))
+    CustomerList->>CustomerList: kiểm tra null/rỗng, isExist(id)
+    CustomerList->>CustomerDAO: add(customer)
+    CustomerDAO->>CustomerDAO: customerList.add(c)
+    CustomerDAO->>FileHelper: saveToFile(customerList)
+    FileHelper-->>CustomerDAO: true/false
+    CustomerDAO-->>CustomerList: true/false
+    CustomerList-->>Menu: true/false
+    Menu-->>User: "Đăng ký thành công / thất bại"
 ```
-Actor (User)
-  |-- Menu.registerCustomer()
-  |     |-- Inputter.inputAndLoop(...)           // nhập & validate id, name, phone
-  |     |-- Inputter.getString(...)              // nhập email
-  |     |-- CustomerList.addCustomer(new Customer(...))
-  |     |     |-- (nội bộ) kiểm tra null/rỗng, isExist(id)
-  |     |     |-- CustomerDAO.add(customer)
-  |     |           |-- customerList.add(c)
-  |     |           |-- FileHelper.saveToFile(customerList)   // ghi customers.dat
-  |     |-- in ra "Đăng ký thành công / thất bại"
-```
 
-Các class & method theo thứ tự:
+Thứ tự class & method:
 1. `Presentation.Menu` → `registerCustomer()`
 2. `Utilities.Inputter` → `inputAndLoop()`, `getString()`
 3. `BusinessObject.CustomerList` → `addCustomer(Customer)`
 4. `DataObjects.CustomerDAO` → `add(Customer)`
 5. `Utilities.FileIO.FileHelper` → `saveToFile(List<Customer>)`
 
-### 3.2. Luồng: Đặt tiệc (Chức năng 5 — Place order)
+### 3.2. Luồng: Đặt tiệc (chức năng 5 — `placeOrder`)
 
-```
-Actor (User)
-  |-- Menu.placeOrder()
-  |     |-- Inputter.inputAndLoop(...)           // nhập mã KH
-  |     |-- CustomerList.findCustomer(id)        // kiểm tra KH tồn tại
-  |     |-- SetMenuList.getAllSetMenus()         // hiển thị menu
-  |     |-- Inputter.getString(...)              // nhập mã menu
-  |     |-- SetMenuList.findByID(menuID)         // kiểm tra menu tồn tại
-  |     |-- Inputter.inputAndLoop/getInt(...)    // nhập tỉnh, số bàn, ngày
-  |     |-- Order order = new Order(null, customer, province, menu, numTables, date)
-  |     |                                  // Order tự sinh orderCode
-  |     |-- OrderList.addOrder(order)
-  |     |     |-- CustomerList.findCustomer(...) // lấy object KH thật
-  |     |     |-- SetMenuList.findByID(...)      // lấy object menu thật
-  |     |     |-- kiểm tra số bàn > 0
-  |     |     |-- OrderDAO.add(order)
-  |     |           |-- orderList.add(order)
-  |     |           |-- FileHelper.saveToFile(orderList)  // ghi orders.dat
-  |     |-- in ra mã đơn & tổng tiền (price * numOfTables)
+```mermaid
+sequenceDiagram
+    actor User
+    participant Menu
+    participant CustomerList
+    participant SetMenuList
+    participant Order
+    participant OrderList
+    participant OrderDAO
+    participant FileHelper
+
+    User->>Menu: chọn "5. Place a feast order"
+    Menu->>CustomerList: findCustomer(id)
+    CustomerList-->>Menu: Customer / null
+    Menu->>SetMenuList: getAllSetMenus() (hiển thị menu)
+    Menu->>SetMenuList: findByID(menuID)
+    SetMenuList-->>Menu: SetMenu / null
+    Menu->>Order: new Order(null, customer, province, menu, numTables, date)
+    Order->>Order: generateOrderCode()
+    Menu->>OrderList: addOrder(order)
+    OrderList->>CustomerList: findCustomer(...) (lấy object KH thật)
+    OrderList->>SetMenuList: findByID(...) (lấy object menu thật)
+    OrderList->>OrderList: kiểm tra numOfTables > 0
+    OrderList->>OrderDAO: add(order)
+    OrderDAO->>OrderDAO: orderList.add(order)
+    OrderDAO->>FileHelper: saveToFile(orderList)
+    FileHelper-->>OrderDAO: true/false
+    OrderDAO-->>OrderList: true/false
+    OrderList-->>Menu: true/false
+    Menu-->>User: mã đơn + tổng tiền (price * numOfTables)
 ```
 
-Các class & method theo thứ tự:
+Thứ tự class & method:
 1. `Presentation.Menu` → `placeOrder()`
 2. `BusinessObject.CustomerList` → `findCustomer(String)`
 3. `BusinessObject.SetMenuList` → `getAllSetMenus()`, `findByID(String)`
-4. `Core.Entities.Order` → constructor (gọi `generateOrderCode()`)
+4. `Core.Entities.Order` → constructor (tự gọi `generateOrderCode()`)
 5. `BusinessObject.OrderList` → `addOrder(Order)`
-   - (bên trong gọi lại `CustomerList.findCustomer`, `SetMenuList.findByID`)
+   — bên trong gọi lại `CustomerList.findCustomer()`, `SetMenuList.findByID()` để xác thực
 6. `DataObjects.OrderDAO` → `add(Order)`
 7. `Utilities.FileIO.FileHelper` → `saveToFile(List<Order>)`
 
-### 3.3. Ghi chú về luồng lưu dữ liệu
-- Mỗi `add/update/delete` ở DAO đều gọi `FileHelper.saveToFile(...)` ngay lập tức
-  => dữ liệu được persist tự động. Menu chức năng 7 (`saveData`) chỉ in thông báo,
-  không làm thêm thao tác ghi (vì đã lưu tự động).
-- `Order` lưu nguyên object `Customer` và `SetMenu` (do implements Serializable),
-  nên khi đọc lại từ file vẫn giữ đầy đủ thông tin liên kết.
+### 3.3. Luồng: Xóa đơn hàng (chức năng 6 nhánh xóa / thao tác nội bộ `deleteOrder`)
+
+Không có menu riêng cho xóa đơn trong `Menu` hiện tại, nhưng luồng nghiệp vụ có sẵn ở
+tầng `OrderList`, minh họa cách các tầng phối hợp cho thao tác xóa:
+
+1. `BusinessObject.OrderList` → `deleteOrder(String orderCode)`
+2. `OrderList` → `isExist(orderCode)` (gọi `orderDAO.findByID`)
+3. `DataObjects.OrderDAO` → `delete(String orderCode)`
+   — `orderList.removeIf(...)` rồi gọi `writeAll(orderList)`
+4. `Utilities.FileIO.FileHelper` → `saveToFile(List<Order>)`
+
+### 3.4. Ghi chú chung về luồng lưu dữ liệu
+
+- Mỗi `add/update/delete` ở tầng DAO đều gọi `FileHelper.saveToFile(...)` **ngay lập
+  tức** → dữ liệu persist tự động, không cần thao tác "Save" riêng.
+- `Order` lưu nguyên object `Customer` và `SetMenu` (nhờ `Serializable`), nên đọc lại từ
+  file vẫn giữ đầy đủ thông tin liên kết mà không cần join thủ công.
+- Tầng `BusinessObject` không bao giờ gọi trực tiếp `FileHelper` — luôn đi qua DAO,
+  giữ đúng ranh giới CONTROL (RAM) vs SAVE (FILE).
 
 ---
 
-## 4. CÁCH BIÊN DỊCH & CHẠY
-
-- Mở project bằng NetBeans (đã có `nbproject/`, `build.xml`, `manifest.mf`).
-- Chạy lớp `Presentation.Program` (chứa `main`).
-- Dữ liệu được lưu tại:
-  - `src/DataObjects/data/customers.dat`
-  - `src/DataObjects/data/orders.dat`
-  - `src/DataObjects/data/setmenus.dat`
-- Build CLI (nếu dùng Ant): `ant run` hoặc `ant jar` trong thư mục Project.
-
----
-
-## 5. CẤU TRÚC THƯ MỤC
+## 4. CẤU TRÚC THƯ MỤC (tham chiếu nhanh)
 
 ```
 Project/
 ├── src/
 │   ├── Core/
-│   │   ├── Entities/      (Customer, Order, SetMenu)        [STORE ENTITY]
-│   │   └── Interfaces/    (IBaseDAO, ICustomerDAO, IOrderDAO, ISetMenuDAO,...)
-│   ├── BusinessObject/    (CustomerList, OrderList, SetMenuList)  [CONTROL/RAM]
-│   ├── DataObjects/       (CustomerDAO, OrderDAO, SetMenuDAO)     [SAVE/FILE]
+│   │   ├── Entities/      (Customer, Order, SetMenu)              [STORE ENTITY]
+│   │   └── Interfaces/    (IBaseDAO, ICustomerDAO, IOrderDAO, ISetMenuDAO)
+│   ├── BusinessObject/    (CustomerList, OrderList, SetMenuList)   [CONTROL/RAM]
+│   ├── DataObjects/       (CustomerDAO, OrderDAO, SetMenuDAO)      [SAVE/FILE]
 │   │   └── data/          (customers.dat, orders.dat, setmenus.dat)
 │   ├── Utilities/
-│   │   ├── FileIO/         (IFileIO, FileHelper)             [UTILS]
-│   │   ├── Validation/     (BaseValidation, CusValidation, OrderValidation)
+│   │   ├── FileIO/        (IFileIO, FileHelper)                   [UTILS]
+│   │   ├── Validation/    (BaseValidation, CusValidation, OrderValidation)
 │   │   └── Inputter.java
 │   └── Presentation/      (Program, Menu)
-├── build/                 (kết quả biên dịch)
-├── nbproject/             (cấu hình NetBeans)
 ├── build.xml, manifest.mf
 └── README.md
 ```
-#   T R A D I T I O N A L - F E A S T - O R D E R - M A N A G E M E N T  
- 
