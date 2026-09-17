@@ -16,9 +16,6 @@ import java.io.UnsupportedEncodingException;
 public class Program {
     public static void main(String[] args) {
         try {
-            // Java 8: PrintStream(OutputStream, boolean, String) tồn tại và ném
-            // UnsupportedEncodingException (checked) -> phải bọc try/catch.
-            // (Overload nhận Charset chỉ có từ Java 10 trở lên.)
             System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out), true, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             // UTF-8 luôn được JVM hỗ trợ, nhánh này thực tế không bao giờ xảy ra.

@@ -149,7 +149,7 @@ public class Menu {
         boolean ok = orderList.addOrder(order);
         if (ok) {
             double total = menu.getPrice() * numOfTables;
-            System.out.println("Đặt tiệc thành công! Mã đơn: " + order.getOrderCode() + " - Tổng tiền: " + total);
+            System.out.printf("Đặt tiệc thành công! Mã đơn: %s - Tổng tiền: %,.0f VNĐ%n", order.getOrderCode(), total);
         } else {
             System.out.println("Đặt tiệc thất bại!");
         }
