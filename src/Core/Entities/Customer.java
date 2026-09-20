@@ -37,11 +37,14 @@ public class Customer implements Serializable{
 
     @Override
     public String toString() {
-        return "Customer{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", phone='" + phone + '\'' +
-                ", email='" + email + '\'' +
-                '}';
+        return String.format(
+                "\n--------------------------------------------------------------\n" +
+                "Code          : %s%n" +
+                "Customer name : %s%n" +
+                "Phone number  : %s%n" +
+                "Email         : %s"   +
+                "\n--------------------------------------------------------------\n",
+                id, name, phone, email
+        );
     }
 }

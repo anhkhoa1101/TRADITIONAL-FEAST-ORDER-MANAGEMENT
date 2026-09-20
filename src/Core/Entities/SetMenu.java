@@ -38,11 +38,22 @@ public class SetMenu implements Serializable{
 
     @Override
     public String toString() {
-        return "SetMenu{" +
-                "menuID='" + menuID + '\'' +
-                ", menuName='" + menuName + '\'' +
-                ", price=" + price +
-                ", ingredients='" + ingredients + '\'' +
-                '}';
+        return String.format(
+                "\n--------------------------------------------------------------\n" +
+                        "Menu ID     : %s%n" +
+                        "Menu name   : %s%n" +
+                        "Price       : %s%n" +
+                        "Ingredients : %s%n" +
+                "\n--------------------------------------------------------------\n",
+                menuID, menuName, price, formatIngredients(ingredients)
+        );
+    }
+
+    private String formatIngredients(String ingredients) {
+        return ingredients
+                .replace("#", "\n")
+                .replace("+ ", "")
+                .replace(": ", ":\n  - ")
+                .replace("; ", "\n  - ");
     }
 }

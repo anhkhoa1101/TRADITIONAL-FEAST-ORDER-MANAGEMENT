@@ -15,7 +15,7 @@ public class Order implements Serializable{
 
     private String generateOrderCode(){
         Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyymmddhhmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         return sdf.format(now);
     }
     public Order() {
@@ -60,13 +60,16 @@ public class Order implements Serializable{
 
     @Override
     public String toString() {
-        return "Order{" +
-                "orderCode='" + orderCode + '\'' +
-                ", customerID='" + customerID + '\'' +
-                ", province='" + province + '\'' +
-                ", menuID='" + menuID + '\'' +
-                ", numOfTables=" + numOfTables +
-                ", eventDate=" + eventDate +
-                '}';
+        return String.format(
+                "\n--------------------------------------------------------------\n" +
+                        "Order code    : %s%n" +
+                        "Customer      : %s%n" +
+                        "Province      : %s%n" +
+                        "Menu ID       : %s%n" +
+                        "Number tables : %d%n" +
+                        "Event date    : %s%n" +
+                "\n--------------------------------------------------------------\n",
+                orderCode, customerID, province, menuID, numOfTables, eventDate
+        );
     }
 }

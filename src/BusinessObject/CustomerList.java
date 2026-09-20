@@ -10,8 +10,9 @@ public class CustomerList {
 
     private final ICustomerDAO customerDAO;
 
-    public CustomerList() {
-        customerDAO = new CustomerDAO();
+
+    public CustomerList(ICustomerDAO customerDAO) {
+        this.customerDAO = customerDAO;
     }
 
     public boolean addCustomer(Customer c) {

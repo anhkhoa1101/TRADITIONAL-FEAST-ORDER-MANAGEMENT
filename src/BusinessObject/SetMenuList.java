@@ -10,8 +10,8 @@ public class SetMenuList {
 
     private final ISetMenuDAO setMenuDAO;
 
-    public SetMenuList() {
-        setMenuDAO = new SetMenuDAO();
+    public SetMenuList(ISetMenuDAO setMenuDAO) {
+        this.setMenuDAO = setMenuDAO;
     }
 
 
@@ -23,11 +23,11 @@ public class SetMenuList {
         return setMenuDAO.findByID(menuID);
     }
 
-    public boolean isExist(String menuID) {
-        return setMenuDAO.findByID(menuID) != null;
-    }
-
-    private boolean isNullOrEmpty(String s) {
-        return s == null || s.trim().isEmpty();
-    }
+//    public boolean isExist(String menuID) {
+//        return setMenuDAO.findByID(menuID) != null;
+//    }
+//
+//    private boolean isNullOrEmpty(String s) {
+//        return s == null || s.trim().isEmpty();
+//    }
 }

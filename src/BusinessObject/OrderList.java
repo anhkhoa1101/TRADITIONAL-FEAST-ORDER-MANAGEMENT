@@ -14,10 +14,10 @@ public class OrderList {
     private final CustomerList customerList;
     private final SetMenuList setMenuList;
 
-    public OrderList() {
-        orderDAO = new OrderDAO();
-        customerList = new CustomerList();
-        setMenuList = new SetMenuList();
+    public OrderList(IOrderDAO orderDAO, CustomerList customerList, SetMenuList setMenuList) {
+        this.orderDAO = orderDAO;
+        this.customerList = customerList;
+        this.setMenuList = setMenuList;
     }
 
     /**

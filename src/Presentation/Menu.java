@@ -3,9 +3,11 @@ package Presentation;
 import BusinessObject.CustomerList;
 import BusinessObject.OrderList;
 import BusinessObject.SetMenuList;
+
 import Core.Entities.Customer;
 import Core.Entities.Order;
 import Core.Entities.SetMenu;
+
 import Utilities.Inputter;
 import Utilities.Validation.CusValidation;
 import Utilities.Validation.OrderValidation;
@@ -29,11 +31,11 @@ public class Menu {
     // Format ngày dùng chung cho nhập/hiển thị eventDate của Order
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
-    public Menu() {
-        in = new Inputter();
-        customerList = new CustomerList();
-        orderList = new OrderList();
-        setMenuList = new SetMenuList();
+    public Menu(Inputter in, CustomerList customerList, OrderList orderList, SetMenuList setMenuList) {
+        this.in = in;
+        this.customerList = customerList;
+        this.orderList = orderList;
+        this.setMenuList = setMenuList;
     }
 
     /**

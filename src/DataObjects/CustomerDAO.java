@@ -9,7 +9,7 @@ import java.util.List;
 
 public class CustomerDAO implements ICustomerDAO {
 
-    private static final String FILE_NAME = "src/DataObjects/data/customers.dat";
+    private static final String FILE_NAME = "src/DataObjects/Data/customers.dat";
     private final IFileIO<Customer> fileIO;
     private List<Customer> customerList;
 
