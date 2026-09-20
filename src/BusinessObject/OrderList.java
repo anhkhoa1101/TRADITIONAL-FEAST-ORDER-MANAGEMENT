@@ -83,6 +83,11 @@ public class OrderList {
         return orderDAO.findByID(orderCode);
     }
 
+    public double calcOrderTotal(Order o) {
+        if (o == null || o.getMenuID() == null) return 0;
+        return o.getMenuID().getPrice() * o.getNumOfTables();
+    }
+
     public boolean isExist(String orderCode) {
         return orderDAO.findByID(orderCode) != null;
     }
@@ -99,5 +104,9 @@ public class OrderList {
                 .filter(o -> o.getMenuID() != null)
                 .mapToDouble(o -> o.getMenuID().getPrice() * o.getNumOfTables())
                 .sum();
+    }
+
+    public boolean saveToFile() {
+        return orderDAO.save();
     }
 }

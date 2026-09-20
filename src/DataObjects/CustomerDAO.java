@@ -15,17 +15,23 @@ public class CustomerDAO implements ICustomerDAO {
 
     public CustomerDAO() {
         fileIO = new FileHelper<>(FILE_NAME);
-        customerList = readAll();
+        customerList = loadFromFile();          // SỬA: nạp file 1 lần lúc khởi động
     }
 
-    @Override
-    public List<Customer> readAll() {
+    // MỚI: đọc file -> RAM (chỉ dùng trong constructor)
+    private List<Customer> loadFromFile() {
         try {
             return fileIO.readFromFile();
         } catch (Exception e) {
             System.out.println("Lỗi đọc file: " + e.getMessage());
             return new ArrayList<>();
         }
+    }
+
+    // SỬA: trả về list đang ở RAM, không đọc file
+    @Override
+    public List<Customer> readAll() {
+        return new ArrayList<>(customerList);
     }
 
     @Override
@@ -39,9 +45,13 @@ public class CustomerDAO implements ICustomerDAO {
     }
 
     @Override
-    public boolean add(Customer c) {
-        customerList.add(c);
+    public boolean save() {
         return writeAll(customerList);
+    }
+
+    @Override
+    public boolean add(Customer c) {
+        return customerList.add(c);
     }
 
     @Override
@@ -49,7 +59,7 @@ public class CustomerDAO implements ICustomerDAO {
         for (int i = 0; i < customerList.size(); i++) {
             if (customerList.get(i).getId().equals(c.getId())) {
                 customerList.set(i, c);
-                return writeAll(customerList);
+                return true;
             }
         }
         return false;
@@ -57,8 +67,7 @@ public class CustomerDAO implements ICustomerDAO {
 
     @Override
     public boolean delete(String id) {
-        boolean removed = customerList.removeIf(c -> c.getId().equals(id));
-        return removed && writeAll(customerList);
+        return customerList.removeIf(c -> c.getId().equals(id));
     }
 
     @Override

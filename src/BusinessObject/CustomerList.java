@@ -55,11 +55,16 @@ public class CustomerList {
         return customerDAO.findByID(id);
     }
 
+
     public boolean isExist(String id) {
         return customerDAO.findByID(id) != null;
     }
 
     private boolean isNullOrEmpty(String s) {
         return s == null || s.trim().isEmpty();
+    }
+
+    public boolean saveToFile() {
+        return customerDAO.save();
     }
 }

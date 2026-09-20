@@ -15,17 +15,23 @@ public class OrderDAO implements IOrderDAO {
 
     public OrderDAO() {
         fileIO = new FileHelper<>(FILE_NAME);
-        orderList = readAll();
+        orderList = loadFromFile();             // SỬA: nạp file 1 lần lúc khởi động
     }
 
-    @Override
-    public List<Order> readAll() {
+    // MỚI: đọc file -> RAM (chỉ dùng trong constructor)
+    private List<Order> loadFromFile() {
         try {
             return fileIO.readFromFile();
         } catch (Exception e) {
             System.out.println("Lỗi đọc file: " + e.getMessage());
             return new ArrayList<>();
         }
+    }
+
+    // SỬA: trả về list đang ở RAM, không đọc file
+    @Override
+    public List<Order> readAll() {
+        return new ArrayList<>(orderList);
     }
 
     @Override
@@ -38,10 +44,15 @@ public class OrderDAO implements IOrderDAO {
         }
     }
 
+    // MỚI: ghi RAM xuống file (gọi từ menu Save)
+    @Override
+    public boolean save() {
+        return writeAll(orderList);
+    }
+
     @Override
     public boolean add(Order o) {
-        orderList.add(o);
-        return writeAll(orderList);
+        return orderList.add(o);                // SỬA: chỉ RAM
     }
 
     @Override
@@ -49,7 +60,7 @@ public class OrderDAO implements IOrderDAO {
         for (int i = 0; i < orderList.size(); i++) {
             if (orderList.get(i).getOrderCode().equals(o.getOrderCode())) {
                 orderList.set(i, o);
-                return writeAll(orderList);
+                return true;                    // SỬA: chỉ RAM
             }
         }
         return false;
@@ -57,8 +68,7 @@ public class OrderDAO implements IOrderDAO {
 
     @Override
     public boolean delete(String orderCode) {
-        boolean removed = orderList.removeIf(o -> o.getOrderCode().equals(orderCode));
-        return removed && writeAll(orderList);
+        return orderList.removeIf(o -> o.getOrderCode().equals(orderCode));   // SỬA: chỉ RAM
     }
 
     @Override

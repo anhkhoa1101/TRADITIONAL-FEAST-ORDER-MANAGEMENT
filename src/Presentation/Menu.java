@@ -54,6 +54,7 @@ public class Menu {
                 case 4 : updateOrderInfo(); break;
                 case 5 : saveData(); break;
                 case 6 : displayOrderList(); break;
+                case 7 : displayInvoices(); break;
                 case 0 : System.out.println("Tạm biệt!");
                 default : System.out.println("Lựa chọn không hợp lệ!");
             }
@@ -70,6 +71,7 @@ public class Menu {
                         "4. Update order information.\n" +
                         "5. Save data to file.\n" +
                         "6. Display order list.\n" +
+                        "7. Display invoice list.\n" +
                         "0. Quit."
         );
     }
@@ -263,10 +265,40 @@ public class Menu {
         else orders.forEach(System.out::println);
     }
 
+    // Liệt kê từng hóa đơn (mỗi Order = 1 dòng) rồi in tổng doanh thu ở cuối.
+    private void displayInvoices() {
+        List<Order> orders = orderList.getAllOrders();
+        if (orders.isEmpty()) {
+            System.out.println("(Chưa có đơn hàng nào)");
+            return;
+        }
+
+        System.out.println("--- Danh sách hóa đơn ---");
+        System.out.printf("%-15s %-6s %-25s %-6s %-6s %-11s %15s%n",
+                "Mã đơn", "Mã KH", "Tên KH", "Menu", "Số bàn", "Ngày", "Thành tiền");
+
+        for (Order o : orders) {
+            System.out.printf("%-15s %-6s %-25s %-6s %-6d %-11s %,15.0f%n",
+                    o.getOrderCode(),
+                    o.getCustomerID().getId(),
+                    o.getCustomerID().getName(),
+                    o.getMenuID().getMenuID(),
+                    o.getNumOfTables(),
+                    dateFormat.format(o.getEventDate()),
+                    orderList.calcOrderTotal(o));
+        }
+
+        System.out.printf("%nTổng doanh thu (%d đơn): %,.0f VNĐ%n",
+                orders.size(), orderList.getTotalRevenue());
+    }
     // ===================== SAVE =====================
 
     // Chỉ mang tính thông báo — dữ liệu thực tế đã được ghi xuống file ngay sau mỗi add/update/delete (xem DAO).
     private void saveData() {
-        System.out.println("Dữ liệu đã được lưu tự động sau mỗi thao tác add/update/delete.");
+        boolean customerOk = customerList.saveToFile();
+        boolean orderOk = orderList.saveToFile();
+        System.out.println(customerOk && orderOk
+                ? "Lưu dữ liệu thành công!"
+                : "Lưu dữ liệu thất bại!");
     }
 }
