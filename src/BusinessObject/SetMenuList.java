@@ -2,7 +2,6 @@ package BusinessObject;
 
 import Core.Entities.SetMenu;
 import Core.Interfaces.ISetMenuDAO;
-import DataObjects.SetMenuDAO;
 
 import java.util.List;
 

@@ -2,7 +2,6 @@ package BusinessObject;
 
 import Core.Entities.Customer;
 import Core.Interfaces.ICustomerDAO;
-import DataObjects.CustomerDAO;
 
 import java.util.List;
 

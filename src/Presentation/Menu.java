@@ -212,7 +212,7 @@ public class Menu {
         }
 
         // orderCode truyền null vì Order tự sinh mã trong constructor (generateOrderCode())
-        Order order = new Order(null, customer, province, menu, numOfTables, eventDate);
+        Order order = new Order(customer, province, menu, numOfTables, eventDate);
 
         boolean ok = orderList.addOrder(order);
         if (ok) {

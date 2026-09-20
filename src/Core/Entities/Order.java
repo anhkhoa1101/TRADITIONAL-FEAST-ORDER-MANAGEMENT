@@ -25,7 +25,7 @@ public class Order implements Serializable{
         this.eventDate = new Date();
     }
 
-    public Order(String orderCode, Customer customerID, String province, SetMenu menuID, int numOfTables, Date eventDate) {
+    public Order(Customer customerID, String province, SetMenu menuID, int numOfTables, Date eventDate) {
         this.orderCode = generateOrderCode();
         this.customerID = customerID;
         this.province = province;
