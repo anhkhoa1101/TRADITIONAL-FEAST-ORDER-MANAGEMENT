@@ -29,7 +29,7 @@ public class Menu {
     private final OrderList orderList;
     private final SetMenuList setMenuList;
     // Format ngày dùng chung cho nhập/hiển thị eventDate của Order
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     public Menu(Inputter in, CustomerList customerList, OrderList orderList, SetMenuList setMenuList) {
         this.in = in;
@@ -55,7 +55,7 @@ public class Menu {
                 case 5 : saveData(); break;
                 case 6 : displayOrderList(); break;
                 case 7 : displayInvoices(); break;
-                case 0 : System.out.println("Tạm biệt!");
+                case 0 : System.out.println("Tạm biệt!"); break;
                 default : System.out.println("Lựa chọn không hợp lệ!");
             }
         } while (choice != 0);
@@ -113,7 +113,7 @@ public class Menu {
         String id = in.inputAndLoop("Nhập mã KH (VD: C0001): ", CusValidation.CUS_ID_VALID, true);
         String name = in.inputAndLoop("Nhập tên KH: ", CusValidation.NAME_VALID, true);
         String phone = in.inputAndLoop("Nhập SĐT (10 số): ", CusValidation.PHONE_VALID, true);
-        String email = in.getString("Nhập email: "); // email không validate theo pattern, nhận tự do
+        String email = in.inputAndLoop("Nhập email: ", CusValidation.EMAIL_PATTERN, true); // email không validate theo pattern, nhận tự do
 
         boolean ok = customerList.addCustomer(new Customer(id, name, phone, email));
         System.out.println(ok ? "Đăng ký thành công!" : "Đăng ký thất bại!");
@@ -203,7 +203,7 @@ public class Menu {
         int numOfTables = in.getInt("Nhập số bàn: ", OrderValidation.NUM_TABLES_VALID);
 
         Date eventDate;
-        String dateStr = in.inputAndLoop("Nhập ngày tổ chức (dd/MM/yyyy): ", OrderValidation.DATE_VALID, true);
+        String dateStr = in.inputAndLoop("Nhập ngày giờ tổ chức (dd/MM/yyyy HH:mm): ", OrderValidation.DATE_VALID, true);
         try {
             eventDate = dateFormat.parse(dateStr);
         } catch (ParseException e) {
@@ -228,6 +228,7 @@ public class Menu {
      * Cho phép đổi tỉnh/thành, số bàn, và tùy chọn đổi set menu (hỏi y/n trước khi hiển thị lại danh sách menu).
      */
     private void updateOrderInfo() {
+        displayOrderList();
         String orderCode = in.getString("Nhập mã đơn cần cập nhật: ");
         Order o = orderList.findOrder(orderCode);
         if (o == null) {
@@ -274,11 +275,11 @@ public class Menu {
         }
 
         System.out.println("--- Danh sách hóa đơn ---");
-        System.out.printf("%-15s %-6s %-25s %-6s %-6s %-11s %15s%n",
+        System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6s| %-16s| %15s%n",
                 "Mã đơn", "Mã KH", "Tên KH", "Menu", "Số bàn", "Ngày", "Thành tiền");
 
         for (Order o : orders) {
-            System.out.printf("%-15s %-6s %-25s %-6s %-6d %-11s %,15.0f%n",
+            System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6d| %-11s| %,15.0f%n",
                     o.getOrderCode(),
                     o.getCustomerID().getId(),
                     o.getCustomerID().getName(),

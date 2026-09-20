@@ -28,7 +28,7 @@ public class CustomerDAO implements ICustomerDAO {
         }
     }
 
-    // SỬA: trả về list đang ở RAM, không đọc file
+    // Trả về list đang ở RAM, không đọc file
     @Override
     public List<Customer> readAll() {
         return new ArrayList<>(customerList);

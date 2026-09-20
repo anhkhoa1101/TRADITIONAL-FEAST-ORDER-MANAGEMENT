@@ -20,7 +20,7 @@ public class Inputter {
 
     public int getInt(String mess, String pattern){
         int result = 0;
-        String temp = getString(mess);
+        String temp = getString(mess).trim();
         if(BaseValidation.isValid(temp, pattern)){
             result = Integer.parseInt(temp);
         }
