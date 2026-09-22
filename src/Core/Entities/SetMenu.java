@@ -42,9 +42,9 @@ public class SetMenu implements Serializable{
                 "\n--------------------------------------------------------------\n" +
                         "Menu ID     : %s%n" +
                         "Menu name   : %s%n" +
-                        "Price       : %s%n" +
+                        "Price       : %,.0f VND%n" +
                         "Ingredients : %s%n" +
-                "\n--------------------------------------------------------------\n",
+                "--------------------------------------------------------------\n",
                 menuID, menuName, price, formatIngredients(ingredients)
         );
     }

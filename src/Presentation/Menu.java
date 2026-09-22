@@ -17,18 +17,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Presentation.Menu — tầng giao diện console (entry point tương tác với người dùng).
- * Chỉ nhận input, gọi xuống BusinessObject (CustomerList/OrderList/SetMenuList) và in kết quả ra màn hình.
- * Không tự xử lý logic nghiệp vụ (validate, tính toán) và không tự đọc/ghi file (đã ủy quyền cho DAO ở tầng dưới).
- */
 public class Menu {
 
     private final Inputter in;
     private final CustomerList customerList;
     private final OrderList orderList;
     private final SetMenuList setMenuList;
-    // Format ngày dùng chung cho nhập/hiển thị eventDate của Order
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     public Menu(Inputter in, CustomerList customerList, OrderList orderList, SetMenuList setMenuList) {
@@ -38,17 +32,13 @@ public class Menu {
         this.setMenuList = setMenuList;
     }
 
-    /**
-     * Vòng lặp chính của chương trình — hiển thị menu, đọc lựa chọn, điều hướng tới chức năng tương ứng.
-     * Thoát khi người dùng chọn 0.
-     */
     public void run() {
         int choice;
         do {
             showMenu();
             choice = in.getInt("Chọn chức năng: ", "^\\d+$");
             switch (choice) {
-                case 1 : customerManagement(); break;   // vào submenu quản lý khách hàng
+                case 1 : customerManagement(); break;
                 case 2 : displayFeastMenus(); break;
                 case 3 : placeOrder(); break;
                 case 4 : updateOrderInfo(); break;
@@ -61,7 +51,6 @@ public class Menu {
         } while (choice != 0);
     }
 
-    // In menu chính ra console
     private void showMenu() {
         System.out.println(
                 "===== TRADITIONAL FEAST ORDER MANAGEMENT =====\n" +
@@ -76,13 +65,31 @@ public class Menu {
         );
     }
 
-    // ===================== CUSTOMER MANAGEMENT (submenu) =====================
+    // ===================== HELPER DÙNG CHUNG =====================
 
     /**
-     * Submenu riêng cho các thao tác liên quan Customer (đăng ký, sửa, tìm, xóa, xem danh sách).
-     * Tách khỏi menu chính để gom nhóm chức năng theo entity, tránh menu chính quá dài.
-     * Chọn 0 để quay lại menu chính (không thoát chương trình).
+     * In danh sách bất kỳ ra console theo khuôn chung: tiêu đề -> nội dung / thông báo rỗng.
+     * Gộp lại để tránh lặp code giữa displayCusList / displayFeastMenus / displayOrderList.
      */
+    private <T> void printList(String header, List<T> list, String emptyMessage) {
+        System.out.println(header);
+        if (list.isEmpty()) {
+            System.out.println(emptyMessage);
+        } else {
+            list.forEach(System.out::println);
+        }
+    }
+
+    /**
+     * Đọc lựa chọn số nguyên và điều hướng theo bảng case do caller cung cấp.
+     * Dùng chung cho run() và customerManagement() để tránh lặp cấu trúc do-while + switch.
+     */
+    private int readChoice() {
+        return in.getInt("Chọn chức năng: ", "^\\d+$");
+    }
+
+    // ===================== CUSTOMER MANAGEMENT =====================
+
     private void customerManagement() {
         int choice;
         do {
@@ -95,37 +102,35 @@ public class Menu {
                             "5. Display customer list.\n" +
                             "0. Back to main menu."
             );
-            choice = in.getInt("Chọn chức năng: ", "^\\d+$");
+            choice = readChoice();
             switch (choice) {
                 case 1 : registerCustomer(); break;
                 case 2 : updateCustomerInfo(); break;
                 case 3 : searchCustomerByName(); break;
                 case 4 : deleteCustomer(); break;
                 case 5 : displayCusList(); break;
-                case 0 : break; // quay lại run(), không in gì thêm
+                case 0 : break;
                 default : System.out.println("Lựa chọn không hợp lệ!");
             }
         } while (choice != 0);
     }
 
-    // Đăng ký khách hàng mới — validate từng trường bằng regex trong CusValidation trước khi tạo Customer.
     private void registerCustomer() {
         String id = in.inputAndLoop("Nhập mã KH (VD: C0001): ", CusValidation.CUS_ID_VALID, true);
         String name = in.inputAndLoop("Nhập tên KH: ", CusValidation.NAME_VALID, true);
         String phone = in.inputAndLoop("Nhập SĐT (10 số): ", CusValidation.PHONE_VALID, true);
-        String email = in.inputAndLoop("Nhập email: ", CusValidation.EMAIL_PATTERN, true); // email không validate theo pattern, nhận tự do
+        String email = in.inputAndLoop("Nhập email: ", CusValidation.EMAIL_PATTERN, true);
 
         boolean ok = customerList.addCustomer(new Customer(id, name, phone, email));
         System.out.println(ok ? "Đăng ký thành công!" : "Đăng ký thất bại!");
     }
 
-    // Cập nhật thông tin khách hàng theo ID — tìm object thật trước, sửa trực tiếp trên object rồi mới update.
     private void updateCustomerInfo() {
         String id = in.inputAndLoop("Nhập mã KH cần cập nhật: ", CusValidation.CUS_ID_VALID, true);
         Customer c = customerList.findCustomer(id);
         if (c == null) {
             System.out.println("Không tìm thấy khách hàng!");
-            return; // dừng sớm nếu không tồn tại, không hỏi thêm thông tin
+            return;
         }
         c.setName(in.inputAndLoop("Tên mới: ", CusValidation.NAME_VALID, true));
         c.setPhone(in.inputAndLoop("SĐT mới: ", CusValidation.PHONE_VALID, true));
@@ -135,54 +140,31 @@ public class Menu {
         System.out.println(ok ? "Cập nhật thành công!" : "Cập nhật thất bại!");
     }
 
-    // Tìm khách hàng theo tên (chấp nhận khớp một phần, không phân biệt hoa/thường — xem CustomerDAO.findByName).
     private void searchCustomerByName() {
         String name = in.getString("Nhập tên cần tìm: ");
-        List<Customer> result = customerList.searchByName(name);
-        if (result.isEmpty()) {
-            System.out.println("Không tìm thấy khách hàng nào!");
-        } else {
-            result.forEach(System.out::println);
-        }
+        printList("--- Kết quả tìm kiếm ---",
+                customerList.searchByName(name),
+                "Không tìm thấy khách hàng nào!");
     }
 
-    // Xóa khách hàng theo ID.
     private void deleteCustomer() {
         String id = in.inputAndLoop("Nhập mã KH cần xóa: ", CusValidation.CUS_ID_VALID, true);
         boolean ok = customerList.deleteCustomer(id);
         System.out.println(ok ? "Xóa thành công!" : "Xóa thất bại!");
     }
 
-    // Hiển thị toàn bộ danh sách khách hàng hiện có.
     private void displayCusList() {
-        System.out.println("--- Danh sách khách hàng ---");
-        List<Customer> customers = customerList.getAllCustomers();
-        if (customers.isEmpty()) System.out.println("(Trống)");
-        else customers.forEach(System.out::println);
+        printList("--- Danh sách khách hàng ---", customerList.getAllCustomers(), "(Trống)");
     }
 
     // ===================== FEAST MENU =====================
 
-    // Hiển thị danh sách các set menu tiệc hiện có (đọc từ FeastMenu.csv qua SetMenuDAO).
     private void displayFeastMenus() {
-        List<SetMenu> menus = setMenuList.getAllSetMenus();
-        if (menus.isEmpty()) {
-            System.out.println("Chưa có set menu nào!");
-        } else {
-            menus.forEach(System.out::println);
-        }
+        printList("--- Danh sách set menu ---", setMenuList.getAllSetMenus(), "Chưa có set menu nào!");
     }
 
     // ===================== ORDER =====================
 
-    /**
-     * Đặt tiệc mới:
-     * 1) Kiểm tra khách hàng tồn tại.
-     * 2) Hiển thị menu để người dùng chọn set menu, kiểm tra menu tồn tại.
-     * 3) Nhập tỉnh/thành, số bàn, ngày tổ chức (parse theo dd/MM/yyyy).
-     * 4) Tạo Order (orderCode = null -> Order tự sinh mã) và gọi orderList.addOrder()
-     *    (bên trong addOrder sẽ tự lấy lại object Customer/SetMenu thật để tránh dữ liệu rỗng).
-     */
     private void placeOrder() {
         String customerID = in.inputAndLoop("Nhập mã KH: ", CusValidation.CUS_ID_VALID, true);
         Customer customer = customerList.findCustomer(customerID);
@@ -191,7 +173,7 @@ public class Menu {
             return;
         }
 
-        displayFeastMenus(); // hiển thị menu để người dùng dễ chọn mã
+        displayFeastMenus();
         String menuID = in.getString("Nhập mã set menu muốn đặt: ");
         SetMenu menu = setMenuList.findByID(menuID);
         if (menu == null) {
@@ -211,22 +193,17 @@ public class Menu {
             return;
         }
 
-        // orderCode truyền null vì Order tự sinh mã trong constructor (generateOrderCode())
         Order order = new Order(customer, province, menu, numOfTables, eventDate);
 
         boolean ok = orderList.addOrder(order);
         if (ok) {
-            double total = menu.getPrice() * numOfTables; // tổng tiền = giá menu * số bàn
+            double total = menu.getPrice() * numOfTables;
             System.out.printf("Đặt tiệc thành công! Mã đơn: %s - Tổng tiền: %,.0f VNĐ%n", order.getOrderCode(), total);
         } else {
             System.out.println("Đặt tiệc thất bại!");
         }
     }
 
-    /**
-     * Cập nhật đơn hàng theo mã đơn.
-     * Cho phép đổi tỉnh/thành, số bàn, và tùy chọn đổi set menu (hỏi y/n trước khi hiển thị lại danh sách menu).
-     */
     private void updateOrderInfo() {
         displayOrderList();
         String orderCode = in.getString("Nhập mã đơn cần cập nhật: ");
@@ -246,7 +223,7 @@ public class Menu {
             SetMenu menu = setMenuList.findByID(menuID);
             if (menu == null) {
                 System.out.println("Set menu không tồn tại!");
-                return; // dừng, không cập nhật gì nếu menu mới không hợp lệ
+                return;
             }
             o.setMenuID(menu);
         }
@@ -258,15 +235,10 @@ public class Menu {
         System.out.println(ok ? "Cập nhật thành công!" : "Cập nhật thất bại!");
     }
 
-    // Hiển thị toàn bộ danh sách đơn hàng hiện có.
     private void displayOrderList() {
-        System.out.println("--- Danh sách đơn hàng ---");
-        List<Order> orders = orderList.getAllOrders();
-        if (orders.isEmpty()) System.out.println("(Trống)");
-        else orders.forEach(System.out::println);
+        printList("--- Danh sách đơn hàng ---", orderList.getAllOrders(), "(Trống)");
     }
 
-    // Liệt kê từng hóa đơn (mỗi Order = 1 dòng) rồi in tổng doanh thu ở cuối.
     private void displayInvoices() {
         List<Order> orders = orderList.getAllOrders();
         if (orders.isEmpty()) {
@@ -292,9 +264,9 @@ public class Menu {
         System.out.printf("%nTổng doanh thu (%d đơn): %,.0f VNĐ%n",
                 orders.size(), orderList.getTotalRevenue());
     }
+
     // ===================== SAVE =====================
 
-    // Chỉ mang tính thông báo — dữ liệu thực tế đã được ghi xuống file ngay sau mỗi add/update/delete (xem DAO).
     private void saveData() {
         boolean customerOk = customerList.saveToFile();
         boolean orderOk = orderList.saveToFile();

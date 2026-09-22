@@ -4,6 +4,7 @@ import Core.Entities.Customer;
 import Core.Entities.Order;
 import Core.Entities.SetMenu;
 import Core.Interfaces.IOrderDAO;
+import java.util.Date;
 
 import java.util.List;
 
@@ -51,6 +52,16 @@ public class OrderList {
             return false;
         }
 
+        if (!isFutureDate(o.getEventDate())) {                 // MỚI: ngày phải ở tương lai
+            System.out.println("Ngày tổ chức phải ở tương lai!");
+            return false;
+        }
+
+        if (isDuplicateOrder(realCustomer.getId(), realMenu.getMenuID(), o.getEventDate())) {
+            System.out.println("Dupplicate data!");   // message đúng nguyên văn theo đề bài
+            return false;
+        }
+
         // Gán lại object thật từ DB (tránh trường hợp Order được truyền vào chứa Customer/SetMenu "rỗng", chỉ có ID)
         o.setCustomerID(realCustomer);
         o.setMenuID(realMenu);
@@ -87,10 +98,6 @@ public class OrderList {
         return o.getMenuID().getPrice() * o.getNumOfTables();
     }
 
-    public boolean isExist(String orderCode) {
-        return orderDAO.findByID(orderCode) != null;
-    }
-
     public List<Order> getOrdersByCustomer(String customerID) {
         return orderDAO.findByCustomerID(customerID);
     }
@@ -103,6 +110,22 @@ public class OrderList {
                 .filter(o -> o.getMenuID() != null)
                 .mapToDouble(o -> o.getMenuID().getPrice() * o.getNumOfTables())
                 .sum();
+    }
+
+    public boolean isFutureDate(Date d) {
+        return d != null && d.after(new Date());
+    }
+
+    private boolean isDuplicateOrder(String customerId, String menuId, Date eventDate) {
+        return orderDAO.readAll().stream().anyMatch(o ->
+                o.getCustomerID() != null && o.getCustomerID().getId().equals(customerId)
+                        && o.getMenuID() != null && o.getMenuID().getMenuID().equals(menuId)
+                        && o.getEventDate() != null && o.getEventDate().equals(eventDate)
+        );
+    }
+
+    public boolean isExist(String orderCode) {
+        return orderDAO.findByID(orderCode) != null;
     }
 
     public boolean saveToFile() {

@@ -1,6 +1,7 @@
 package Utilities;
 
 import Utilities.Validation.BaseValidation;
+
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
@@ -9,22 +10,18 @@ import java.util.Scanner;
 public class Inputter {
     private Scanner scanner;
 
-    public Inputter(){
+    public Inputter() {
         this.scanner = new Scanner(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     }
 
-    public String getString(String mess){
+    public String getString(String mess) {
         System.out.println(mess);
         return scanner.nextLine();
     }
 
-    public int getInt(String mess, String pattern){
-        int result = 0;
-        String temp = getString(mess).trim();
-        if(BaseValidation.isValid(temp, pattern)){
-            result = Integer.parseInt(temp);
-        }
-        return result;
+    public int getInt(String mess, String pattern) {
+        String temp = inputAndLoop(mess, pattern, true);
+        return Integer.parseInt(temp);
     }
 
     public double getDouble(String mess, String pattern) {
@@ -37,25 +34,29 @@ public class Inputter {
 
         return result;
     }
-// Ví dụ: inputAndLoop ("CustomerID: ", Acceptable.CUS_ID_VALID, loop)
-public String inputAndLoop(String mess, String pattern, boolean loop) {
-    String result;
 
-    do {
-        result = getString(mess).trim();
+    // Ví dụ: inputAndLoop ("CustomerID: ", Acceptable.CUS_ID_VALID, loop)
+    public String inputAndLoop(String mess, String pattern, boolean loop) {
+        String result;
 
-        if (!BaseValidation.isValid(result, pattern)) {
-            if (loop) {
-                System.out.println("Data is invalid! Re-enter.");
+        do {
+            result = getString(mess).trim();
+
+            if (!BaseValidation.isValid(result, pattern)) {
+                if (loop) {
+                    System.out.println("Data is invalid! Re-enter.");
+                } else {
+                    return result;
+                }
             } else {
                 return result;
             }
-        } else {
-            return result;
-        }
+        } while (loop);
 
-    } while (loop);
+        return result;
 
-    return result;
-}
+    }
+
+
+
 }

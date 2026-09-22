@@ -3,12 +3,13 @@ package BusinessObject;
 import Core.Entities.Customer;
 import Core.Interfaces.ICustomerDAO;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CustomerList {
 
     private final ICustomerDAO customerDAO;
-
 
     public CustomerList(ICustomerDAO customerDAO) {
         this.customerDAO = customerDAO;
@@ -42,18 +43,29 @@ public class CustomerList {
         return customerDAO.delete(id);
     }
 
+    /**
+     * Tìm theo tên (chấp nhận khớp một phần), kết quả sắp xếp alphabet (Function 3).
+     */
     public List<Customer> searchByName(String name) {
-        return customerDAO.findByName(name);
+        return sortByName(customerDAO.findByName(name));
     }
 
+    /**
+     * Toàn bộ danh sách khách hàng, sắp xếp alphabet theo tên (Function 8).
+     */
     public List<Customer> getAllCustomers() {
-        return customerDAO.readAll();
+        return sortByName(customerDAO.readAll());
+    }
+
+    private List<Customer> sortByName(List<Customer> list) {
+        return list.stream()
+                .sorted(Comparator.comparing(Customer::getName, String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
     }
 
     public Customer findCustomer(String id) {
         return customerDAO.findByID(id);
     }
-
 
     public boolean isExist(String id) {
         return customerDAO.findByID(id) != null;
