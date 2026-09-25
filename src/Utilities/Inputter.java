@@ -24,16 +24,6 @@ public class Inputter {
         return Integer.parseInt(temp);
     }
 
-    public double getDouble(String mess, String pattern) {
-        double result = 0;
-        String temp = getString(mess);
-
-        if (BaseValidation.isValid(temp, pattern)) {
-            result = Double.parseDouble(temp);
-        }
-
-        return result;
-    }
 
     // Ví dụ: inputAndLoop ("CustomerID: ", Acceptable.CUS_ID_VALID, loop)
     public String inputAndLoop(String mess, String pattern, boolean loop) {

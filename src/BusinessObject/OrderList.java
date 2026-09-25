@@ -3,10 +3,14 @@ package BusinessObject;
 import Core.Entities.Customer;
 import Core.Entities.Order;
 import Core.Entities.SetMenu;
+
 import Core.Interfaces.IOrderDAO;
+
 import java.util.Date;
 
 import java.util.List;
+
+import java.text.SimpleDateFormat;
 
 public class OrderList {
 
@@ -118,10 +122,16 @@ public class OrderList {
 
     private boolean isDuplicateOrder(String customerId, String menuId, Date eventDate) {
         return orderDAO.readAll().stream().anyMatch(o ->
-                o.getCustomerID() != null && o.getCustomerID().getId().equals(customerId)
-                        && o.getMenuID() != null && o.getMenuID().getMenuID().equals(menuId)
-                        && o.getEventDate() != null && o.getEventDate().equals(eventDate)
+                o.getCustomerID().getId().equals(customerId) &&   // (1) cùng KH
+                        o.getMenuID().getMenuID().equals(menuId) &&        // (2) cùng menu
+                        isSameDay(o.getEventDate(), eventDate)              // (3) cùng ngày
         );
+    }
+
+    private boolean isSameDay(Date d1, Date d2) {
+        if (d1 == null || d2 == null) return false;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        return sdf.format(d1).equals(sdf.format(d2));
     }
 
     public boolean isExist(String orderCode) {

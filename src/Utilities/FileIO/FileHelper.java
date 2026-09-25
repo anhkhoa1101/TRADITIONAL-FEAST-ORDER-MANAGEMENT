@@ -54,6 +54,7 @@ public class FileHelper<E> implements IFileIO<E> {
      * Ghi danh sách object xuống file nhị phân.
      * Trả về true nếu ghi thành công, false nếu thất bại.
      */
+
     @Override
     public boolean saveToFile(List<E> list) throws Exception {
         File f = new File(filePath);

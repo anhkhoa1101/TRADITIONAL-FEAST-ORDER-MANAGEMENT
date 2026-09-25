@@ -6,6 +6,8 @@ import Core.Interfaces.ICustomerDAO;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.text.Collator;
+import java.util.Locale;
 
 public class CustomerList {
 
@@ -58,13 +60,21 @@ public class CustomerList {
     }
 
     private List<Customer> sortByName(List<Customer> list) {
+        Collator collator = Collator.getInstance(new Locale("vi", "VN"));
         return list.stream()
-                .sorted(Comparator.comparing(Customer::getName, String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator.comparing(
+                        (Customer c) -> getGivenName(c.getName()),
+                        collator::compare))
                 .collect(Collectors.toList());
     }
 
     public Customer findCustomer(String id) {
         return customerDAO.findByID(id);
+    }
+    private static String getGivenName(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) return "";
+        String[] parts = fullName.trim().split("\\s+");
+        return parts[parts.length - 1];
     }
 
     public boolean isExist(String id) {
@@ -78,4 +88,6 @@ public class CustomerList {
     public boolean saveToFile() {
         return customerDAO.save();
     }
+
+
 }

@@ -78,32 +78,20 @@ public class CustomerDAO implements ICustomerDAO {
     @Override
     public List<Customer> findByName(String name) {
         List<Customer> result = new ArrayList<>();
-        if (name == null || name.trim().isEmpty()) return result;
-
-        for (Customer c : customerList) {
-            if (matchesName(c.getName(), name)) {
-                result.add(c);
+//        if (name == null || name.trim().isEmpty()) return result;
+//
+//        for (Customer c : customerList) {
+//            if (matchesName(c.getName(), name)) {
+//                result.add(c);
+//            }
+//        }
+//        return result;
+        for (Customer s : customerList) {
+            if (s.getName().toLowerCase().contains(name.toLowerCase())) {
+                result.add(s);
             }
         }
         return result;
     }
-
-    // Khớp theo từ trọn vẹn, cho phép cụm nhiều từ liên tiếp, phân biệt hoa/thường và dấu
-    private static boolean matchesName(String fullName, String keyword) {
-        String[] nameWords = fullName.trim().split("\\s+");
-        String[] queryWords = keyword.trim().split("\\s+");
-        if (queryWords.length == 0 || queryWords.length > nameWords.length) return false;
-
-        for (int i = 0; i + queryWords.length <= nameWords.length; i++) {
-            boolean match = true;
-            for (int j = 0; j < queryWords.length; j++) {
-                if (!nameWords[i + j].equals(queryWords[j])) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) return true;
-        }
-        return false;
-    }
 }
+
