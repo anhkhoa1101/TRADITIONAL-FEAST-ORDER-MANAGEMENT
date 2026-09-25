@@ -18,6 +18,10 @@ public class OrderList {
     private final CustomerList customerList;
     private final SetMenuList setMenuList;
 
+    /**
+     *  CONSTRUCTOR
+     */
+
     public OrderList(IOrderDAO orderDAO, CustomerList customerList, SetMenuList setMenuList) {
         this.orderDAO = orderDAO;
         this.customerList = customerList;
@@ -25,8 +29,9 @@ public class OrderList {
     }
 
     /**
-     * Thêm đơn hàng — kiểm tra Customer và SetMenu (theo object nhúng trong Order) có thực sự tồn tại trong hệ thống không.
+     * CRUD
      */
+
     public boolean addOrder(Order o) {
         if (o == null || o.getCustomerID() == null || o.getMenuID() == null) {
             System.out.println("Thông tin đơn hàng không đầy đủ!");
@@ -93,13 +98,12 @@ public class OrderList {
         return orderDAO.readAll();
     }
 
+    /**
+     * FIND
+     */
+
     public Order findOrder(String orderCode) {
         return orderDAO.findByID(orderCode);
-    }
-
-    public double calcOrderTotal(Order o) {
-        if (o == null || o.getMenuID() == null) return 0;
-        return o.getMenuID().getPrice() * o.getNumOfTables();
     }
 
     public List<Order> getOrdersByCustomer(String customerID) {
@@ -109,12 +113,22 @@ public class OrderList {
     /**
      * Tính tổng doanh thu = giá SetMenu * số bàn, cộng dồn tất cả đơn hàng.
      */
+
     public double getTotalRevenue() {
         return orderDAO.readAll().stream()
                 .filter(o -> o.getMenuID() != null)
                 .mapToDouble(o -> o.getMenuID().getPrice() * o.getNumOfTables())
                 .sum();
     }
+
+    public double calcOrderTotal(Order o) {
+        if (o == null || o.getMenuID() == null) return 0;
+        return o.getMenuID().getPrice() * o.getNumOfTables();
+    }
+
+    /**
+     * CHECK
+     */
 
     public boolean isFutureDate(Date d) {
         return d != null && d.after(new Date());
@@ -123,8 +137,8 @@ public class OrderList {
     private boolean isDuplicateOrder(String customerId, String menuId, Date eventDate) {
         return orderDAO.readAll().stream().anyMatch(o ->
                 o.getCustomerID().getId().equals(customerId) &&   // (1) cùng KH
-                        o.getMenuID().getMenuID().equals(menuId) &&        // (2) cùng menu
-                        isSameDay(o.getEventDate(), eventDate)              // (3) cùng ngày
+                o.getMenuID().getMenuID().equals(menuId) &&        // (2) cùng menu
+                isSameDay(o.getEventDate(), eventDate)              // (3) cùng ngày
         );
     }
 
@@ -137,6 +151,10 @@ public class OrderList {
     public boolean isExist(String orderCode) {
         return orderDAO.findByID(orderCode) != null;
     }
+
+    /**
+     * SAVE
+     */
 
     public boolean saveToFile() {
         return orderDAO.save();

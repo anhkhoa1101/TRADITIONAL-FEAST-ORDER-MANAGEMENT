@@ -13,9 +13,17 @@ public class CustomerList {
 
     private final ICustomerDAO customerDAO;
 
+    /**
+     * CONSTRUCTOR
+     */
+
     public CustomerList(ICustomerDAO customerDAO) {
         this.customerDAO = customerDAO;
     }
+
+    /**
+     * CRUD
+     */
 
     public boolean addCustomer(Customer c) {
         if (c == null || isNullOrEmpty(c.getId()) || isNullOrEmpty(c.getName())) {
@@ -45,19 +53,31 @@ public class CustomerList {
         return customerDAO.delete(id);
     }
 
+    public List<Customer> getAllCustomers() {
+        return sortByName(customerDAO.readAll());
+    }
+
     /**
-     * Tìm theo tên (chấp nhận khớp một phần), kết quả sắp xếp alphabet (Function 3).
+     * SEARCH
      */
+
+    public Customer findCustomer(String id) {
+        return customerDAO.findByID(id);
+    }
+
     public List<Customer> searchByName(String name) {
         return sortByName(customerDAO.findByName(name));
     }
 
-    /**
-     * Toàn bộ danh sách khách hàng, sắp xếp alphabet theo tên (Function 8).
-     */
-    public List<Customer> getAllCustomers() {
-        return sortByName(customerDAO.readAll());
+    private static String getGivenName(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) return "";
+        String[] parts = fullName.trim().split("\\s+");
+        return parts[parts.length - 1];
     }
+
+    /**
+     * SORT
+     */
 
     private List<Customer> sortByName(List<Customer> list) {
         Collator collator = Collator.getInstance(new Locale("vi", "VN"));
@@ -68,14 +88,9 @@ public class CustomerList {
                 .collect(Collectors.toList());
     }
 
-    public Customer findCustomer(String id) {
-        return customerDAO.findByID(id);
-    }
-    private static String getGivenName(String fullName) {
-        if (fullName == null || fullName.trim().isEmpty()) return "";
-        String[] parts = fullName.trim().split("\\s+");
-        return parts[parts.length - 1];
-    }
+    /**
+     * CHECK
+     */
 
     public boolean isExist(String id) {
         return customerDAO.findByID(id) != null;
@@ -84,6 +99,10 @@ public class CustomerList {
     private boolean isNullOrEmpty(String s) {
         return s == null || s.trim().isEmpty();
     }
+
+    /**
+     * SAVE TO FILE
+     */
 
     public boolean saveToFile() {
         return customerDAO.save();

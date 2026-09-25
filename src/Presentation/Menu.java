@@ -31,9 +31,11 @@ public class Menu {
     {
         dateFormat.setLenient(false);
     }
-
     private static final String LINE = "---------------------------------------------------------------------------";
 
+    /**
+     * CONSTRUCTOR
+     */
     public Menu(Inputter in, CustomerList customerList, OrderList orderList, SetMenuList setMenuList) {
         this.in = in;
         this.customerList = customerList;
@@ -41,6 +43,9 @@ public class Menu {
         this.setMenuList = setMenuList;
     }
 
+    /**
+     * RUN
+     */
     public void run() {
         int choice;
         do {
@@ -77,7 +82,6 @@ public class Menu {
     }
 
     // ===================== HELPER DÙNG CHUNG =====================
-
     /**
      * In danh sách bất kỳ ra console theo khuôn chung: tiêu đề -> nội dung / thông báo rỗng.
      * Gộp lại để tránh lặp code giữa displayCusList / displayFeastMenus / displayOrderList.
@@ -99,8 +103,10 @@ public class Menu {
         return in.getInt("Chọn chức năng: ", "^\\d+$");
     }
 
-    // ===================== CUSTOMER MANAGEMENT =====================
 
+    /**
+     * CUSTOMER MANAGEMENT
+     */
     private void customerManagement() {
         int choice;
         do {
@@ -125,8 +131,8 @@ public class Menu {
             }
         } while (choice != 0);
     }
-    // ===================== Register Customer =====================
 
+    // ===================== Register Customer =====================
     private void registerCustomer() {
         String id = in.inputAndLoop("Nhập mã KH (VD: C0001): ", CusValidation.CUS_ID_VALID, true);
         String name = in.inputAndLoop("Nhập tên KH: ", CusValidation.NAME_VALID, true);
@@ -136,8 +142,8 @@ public class Menu {
         boolean ok = customerList.addCustomer(new Customer(id, name, phone, email));
         System.out.println(ok ? "Đăng ký thành công!" : "Đăng ký thất bại!");
     }
-    // ===================== Update Customer =====================
 
+    // ===================== Update Customer =====================
     private void updateCustomerInfo() {
         String id = in.inputAndLoop("Nhập mã KH cần cập nhật: ", CusValidation.CUS_ID_VALID, true);
         Customer c = customerList.findCustomer(id);
@@ -154,14 +160,13 @@ public class Menu {
     }
 
     // ===================== DELETE CUSTOMER =====================
-
     private void deleteCustomer() {
         String id = in.inputAndLoop("Nhập mã KH cần xóa: ", CusValidation.CUS_ID_VALID, true);
         boolean ok = customerList.deleteCustomer(id);
         System.out.println(ok ? "Xóa thành công!" : "Xóa thất bại!");
     }
-    // ===================== SEARCH CUSTOMER =====================
 
+    // ===================== SEARCH CUSTOMER =====================
     private void searchCustomerByName() {
         String name = in.getString("Nhập tên cần tìm: ");
         List<Customer> result = customerList.searchByName(name);
@@ -182,14 +187,17 @@ public class Menu {
         }
     }
 
-    // ===================== FEAST MENU =====================
+    /**
+     * MENU
+     */
 
     private void displayFeastMenus() {
         printList("--- Danh sách set menu ---", setMenuList.getAllSetMenus(), "Chưa có set menu nào!");
     }
 
-    // ===================== ORDER =====================
-
+    /**
+     * ORDER
+     */
     private void placeOrder() {
         String customerID = in.inputAndLoop("Nhập mã KH: ", CusValidation.CUS_ID_VALID, true);
         Customer customer = customerList.findCustomer(customerID);
@@ -228,7 +236,10 @@ public class Menu {
             System.out.println("Đặt tiệc thất bại!");
         }
     }
-    // ===================== UPDATE ORDER =====================
+
+    /**
+     * UPDATE
+     */
     private void updateOrderInfo() {
         displayOrderList();
         String orderCode = in.getString("Nhập mã đơn cần cập nhật: ");
@@ -288,11 +299,9 @@ public class Menu {
         System.out.println(ok ? "Cập nhật thành công!" : "Cập nhật thất bại!");
     }
 
-    // Đổi Date -> LocalDate (theo múi giờ máy) để so sánh theo NGÀY, bỏ qua giờ phút
-    private LocalDate toLocalDate(Date d) {
-        return d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    }
-
+    /**
+     * DISPLAY
+     */
     private void displayOrderList() {
         printList("--- Danh sách đơn hàng ---", orderList.getAllOrders(), "(Trống)");
     }
@@ -324,7 +333,9 @@ public class Menu {
     }
 
 
-    // ===================== PRINT CUSTOMER =====================
+    /**
+     * PRINT TABLE
+     */
     private void printCustomerTable(List<Customer> customers) {
         System.out.println("Customers information:");
         System.out.println(LINE);
@@ -336,20 +347,28 @@ public class Menu {
         }
         System.out.println(LINE);
     }
-    // ===================== FORMAR NAME =====================
-    private String formatName(String fullName) {
-        if (fullName == null) return "";
-        String name = fullName.trim().replaceAll("\\s+", " ");
-        int lastSpace = name.lastIndexOf(' ');
-        if (lastSpace < 0) return name;
-        String firstName = name.substring(lastSpace + 1);
-        String rest = name.substring(0, lastSpace);
-        return firstName + ", " + rest;
+
+    private void printInvoiceTable(List<Order> orders) {
+        System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6s| %-16s| %15s%n",
+                "Mã đơn", "Mã KH", "Tên KH", "Menu", "Số bàn", "Ngày", "Thành tiền");
+
+        for (Order o : orders) {
+            System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6d| %-16s| %,15.0f%n",
+                    o.getOrderCode(),
+                    o.getCustomerID().getId(),
+                    o.getCustomerID().getName(),
+                    o.getMenuID().getMenuID(),
+                    o.getNumOfTables(),
+                    dateFormat.format(o.getEventDate()),
+                    orderList.calcOrderTotal(o));
+        }
     }
 
 
-    // ===================== SAVE =====================
-// Tìm hóa đơn theo TÊN khách hàng (khớp một phần, không phân biệt hoa/thường).
+
+    /**
+     * SEARCH TABLE
+     */
     private void searchInvoicesByCustomer() {
         String name = in.getString("Nhập tên khách hàng cần tìm hóa đơn: ").trim();
         if (name.isEmpty()) {
@@ -384,23 +403,25 @@ public class Menu {
         System.out.printf("%nTổng tiền (%d đơn): %,.0f VNĐ%n", orders.size(), total);
     }
 
-    private void printInvoiceTable(List<Order> orders) {
-        System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6s| %-16s| %15s%n",
-                "Mã đơn", "Mã KH", "Tên KH", "Menu", "Số bàn", "Ngày", "Thành tiền");
-
-        for (Order o : orders) {
-            System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6d| %-16s| %,15.0f%n",
-                    o.getOrderCode(),
-                    o.getCustomerID().getId(),
-                    o.getCustomerID().getName(),
-                    o.getMenuID().getMenuID(),
-                    o.getNumOfTables(),
-                    dateFormat.format(o.getEventDate()),
-                    orderList.calcOrderTotal(o));
-        }
+    /**
+     * FORMAT
+     */
+    private String formatName(String fullName) {
+        if (fullName == null) return "";
+        String name = fullName.trim().replaceAll("\\s+", " ");
+        int lastSpace = name.lastIndexOf(' ');
+        if (lastSpace < 0) return name;
+        String firstName = name.substring(lastSpace + 1);
+        String rest = name.substring(0, lastSpace);
+        return firstName + ", " + rest;
     }
-    // ===================== SAVE =====================
 
+    // Đổi Date -> LocalDate (theo múi giờ máy) để so sánh theo NGÀY, bỏ qua giờ phút
+    private LocalDate toLocalDate(Date d) {
+        return d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    // ===================== SAVE =====================
     private void saveData() {
         boolean customerOk = customerList.saveToFile();
         boolean orderOk = orderList.saveToFile();
