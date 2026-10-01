@@ -8,7 +8,6 @@ public class Order implements Serializable{
     private static final long serialVersionUID = 1L;
     private String orderCode;
     private Customer customerID;
-    private String province;
     private SetMenu menuID;
     private int numOfTables;
     private Date eventDate;
@@ -25,10 +24,9 @@ public class Order implements Serializable{
         this.eventDate = new Date();
     }
 
-    public Order(Customer customerID, String province, SetMenu menuID, int numOfTables, Date eventDate) {
+    public Order(Customer customerID, SetMenu menuID, int numOfTables, Date eventDate) {
         this.orderCode = generateOrderCode();
         this.customerID = customerID;
-        this.province = province;
         this.menuID = menuID;
         this.numOfTables = numOfTables;
         this.eventDate = eventDate;
@@ -41,10 +39,6 @@ public class Order implements Serializable{
     public Customer getCustomerID() {return customerID;}
 
     public void setCustomerID(Customer customerID) {this.customerID = customerID;}
-
-    public String getProvince() {return province;}
-
-    public void setProvince(String province) {this.province = province;}
 
     public SetMenu getMenuID() {return menuID;}
 
@@ -64,12 +58,11 @@ public class Order implements Serializable{
                 "\n--------------------------------------------------------------\n" +
                         "Order code    : %s%n" +
                         "Customer      : %s%n" +
-                        "Province      : %s%n" +
                         "Menu ID       : %s%n" +
                         "Number tables : %d%n" +
                         "Event date    : %s%n" +
                 "\n--------------------------------------------------------------\n",
-                orderCode, customerID, province, menuID, numOfTables, eventDate
+                orderCode, customerID, menuID, numOfTables, eventDate
         );
     }
 }

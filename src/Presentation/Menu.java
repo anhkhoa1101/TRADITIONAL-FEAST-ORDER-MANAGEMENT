@@ -50,7 +50,7 @@ public class Menu {
         int choice;
         do {
             showMenu();
-            choice = in.getInt("Chọn chức năng: ", "^\\d+$");
+            choice = in.getInt("Select an option: ", "^\\d+$");
             switch (choice) {
                 case 1 : customerManagement(); break;
                 case 2 : displayFeastMenus(); break;
@@ -59,9 +59,10 @@ public class Menu {
                 case 5 : saveData(); break;
                 case 6 : displayOrderList(); break;
                 case 7 : displayInvoices(); break;
-                case 8: searchInvoicesByCustomer();
-                case 0 : System.out.println("Tạm biệt!"); break;
-                default : System.out.println("Lựa chọn không hợp lệ!");
+                case 8 : searchInvoicesByCustomer(); break;
+                case 9: findOrderMore10();
+                case 0 : System.out.println("Goodbye!"); break;
+                default: System.out.println("Invalid choice!");
             }
         } while (choice != 0);
     }
@@ -96,11 +97,44 @@ public class Menu {
     }
 
     /**
+     * PRINT TABLE
+     */
+    private void printCustomerTable(List<Customer> customers) {
+        System.out.println("Customers information:");
+        System.out.println(LINE);
+        System.out.printf("%-6s| %-26s| %-12s| %s%n", "Code", "Customer Name", "Phone", "Email");
+        System.out.println(LINE);
+        for (Customer c : customers) {
+            System.out.printf("%-6s| %-26s| %-12s| %s%n",
+                    c.getId(), formatName(c.getName()), c.getPhone(), c.getEmail());
+        }
+        System.out.println(LINE);
+    }
+
+    private void printInvoiceTable(List<Order> orders) {
+        System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6s| %-16s| %15s%n",
+                "Order Code", "Cus ID", "Customer Name", "Menu", "Tables", "Date", "Total");
+
+        for (Order o : orders) {
+            System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6d| %-16s| %,15.0f%n",
+                    o.getOrderCode(),
+                    o.getCustomerID().getId(),
+                    o.getCustomerID().getName(),
+                    o.getMenuID().getMenuID(),
+                    o.getNumOfTables(),
+                    dateFormat.format(o.getEventDate()),
+                    orderList.calcOrderTotal(o));
+        }
+    }
+
+
+
+    /**
      * Đọc lựa chọn số nguyên và điều hướng theo bảng case do caller cung cấp.
      * Dùng chung cho run() và customerManagement() để tránh lặp cấu trúc do-while + switch.
      */
     private int readChoice() {
-        return in.getInt("Chọn chức năng: ", "^\\d+$");
+        return in.getInt("Select an option: ", "^\\d+$");
     }
 
 
@@ -127,195 +161,73 @@ public class Menu {
                 case 4 : deleteCustomer(); break;
                 case 5 : displayCusList(); break;
                 case 0 : break;
-                default : System.out.println("Lựa chọn không hợp lệ!");
+                default : System.out.println("Invalid choice!");
             }
         } while (choice != 0);
     }
 
     // ===================== Register Customer =====================
     private void registerCustomer() {
-        String id = in.inputAndLoop("Nhập mã KH (VD: C0001): ", CusValidation.CUS_ID_VALID, true);
-        String name = in.inputAndLoop("Nhập tên KH: ", CusValidation.NAME_VALID, true);
-        String phone = in.inputAndLoop("Nhập SĐT (10 số): ", CusValidation.PHONE_VALID, true);
-        String email = in.inputAndLoop("Nhập email: ", CusValidation.EMAIL_PATTERN, true);
+        String id = in.inputAndLoop("Enter customer ID (e.g., C0001): ", CusValidation.CUS_ID_VALID, true);
+        String name = in.inputAndLoop("Enter customer name: ", CusValidation.NAME_VALID, true);
+        String phone = in.inputAndLoop("Enter phone number (10 digits): ", CusValidation.PHONE_VALID, true);
+        String email = in.inputAndLoop("Enter email: ", CusValidation.EMAIL_PATTERN, true);
 
         boolean ok = customerList.addCustomer(new Customer(id, name, phone, email));
-        System.out.println(ok ? "Đăng ký thành công!" : "Đăng ký thất bại!");
+        System.out.println(ok ? "Registration successful!" : "Registration failed!");
     }
 
     // ===================== Update Customer =====================
     private void updateCustomerInfo() {
-        String id = in.inputAndLoop("Nhập mã KH cần cập nhật: ", CusValidation.CUS_ID_VALID, true);
+        String id = in.inputAndLoop("Enter customer ID to update: ", CusValidation.CUS_ID_VALID, true);
         Customer c = customerList.findCustomer(id);
         if (c == null) {
-            System.out.println("Không tìm thấy khách hàng!");
+            System.out.println("Customer not found!");
             return;
         }
-        c.setName(in.inputAndLoop("Tên mới: ", CusValidation.NAME_VALID, true));
-        c.setPhone(in.inputAndLoop("SĐT mới: ", CusValidation.PHONE_VALID, true));
-        c.setEmail(in.getString("Email mới: "));
+        c.setName(in.inputAndLoop("New name: ", CusValidation.NAME_VALID, true));
+        c.setPhone(in.inputAndLoop("New phone number: ", CusValidation.PHONE_VALID, true));
+        c.setEmail(in.getString("New email: "));
 
         boolean ok = customerList.updateCustomer(c);
-        System.out.println(ok ? "Cập nhật thành công!" : "Cập nhật thất bại!");
+        System.out.println(ok ? "Update successful!" : "Update failed!");
     }
 
     // ===================== DELETE CUSTOMER =====================
     private void deleteCustomer() {
-        String id = in.inputAndLoop("Nhập mã KH cần xóa: ", CusValidation.CUS_ID_VALID, true);
+        String id = in.inputAndLoop("Enter customer ID to delete: ", CusValidation.CUS_ID_VALID, true);
         boolean ok = customerList.deleteCustomer(id);
-        System.out.println(ok ? "Xóa thành công!" : "Xóa thất bại!");
+        System.out.println(ok ? "Delete successful!" : "Delete failed!");
     }
 
     // ===================== SEARCH CUSTOMER =====================
     private void searchCustomerByName() {
-        String name = in.getString("Nhập tên cần tìm: ");
-        List<Customer> result = customerList.searchByName(name);
+        String name = in.getString("Enter name to search: ");
+        List<Customer> result = customerList.findByName(name);
         if (result.isEmpty()) {
-            System.out.println("Không tìm thấy khách hàng nào!");
+            System.out.println("No customers found!");
         } else {
             printCustomerTable(result);
         }
-    }
-
-    // ===================== DISPLAY CUSTOMERS =====================
-    private void displayCusList() {
-        List<Customer> customers = customerList.getAllCustomers();
-        if (customers.isEmpty()) {
-            System.out.println("(Trống)");
-        } else {
-            printCustomerTable(customers);
-        }
-    }
-
-    /**
-     * MENU
-     */
-
-    private void displayFeastMenus() {
-        printList("--- Danh sách set menu ---", setMenuList.getAllSetMenus(), "Chưa có set menu nào!");
-    }
-
-    /**
-     * ORDER
-     */
-    private void placeOrder() {
-        String customerID = in.inputAndLoop("Nhập mã KH: ", CusValidation.CUS_ID_VALID, true);
-        Customer customer = customerList.findCustomer(customerID);
-        if (customer == null) {
-            System.out.println("Khách hàng không tồn tại!");
-            return;
-        }
-
-        displayFeastMenus();
-        String menuID = in.getString("Nhập mã set menu muốn đặt: ");
-        SetMenu menu = setMenuList.findByID(menuID);
-        if (menu == null) {
-            System.out.println("Set menu không tồn tại!");
-            return;
-        }
-
-        String province = in.inputAndLoop("Nhập tỉnh/thành tổ chức: ", OrderValidation.PROVINCE_VALID, true);
-        int numOfTables = in.getInt("Nhập số bàn: ", OrderValidation.NUM_TABLES_VALID);
-
-        Date eventDate;
-        String dateStr = in.inputAndLoop("Nhập ngày giờ tổ chức (dd/MM/yyyy): ", OrderValidation.DATE_VALID, true);
-        try {
-            eventDate = dateFormat.parse(dateStr);
-        } catch (ParseException e) {
-            System.out.println("Ngày không hợp lệ!");
-            return;
-        }
-
-        Order order = new Order(customer, province, menu, numOfTables, eventDate);
-
-        boolean ok = orderList.addOrder(order);
-        if (ok) {
-            double total = menu.getPrice() * numOfTables;
-            System.out.printf("Đặt tiệc thành công! Mã đơn: %s - Tổng tiền: %,.0f VNĐ%n", order.getOrderCode(), total);
-        } else {
-            System.out.println("Đặt tiệc thất bại!");
-        }
-    }
-
-    /**
-     * UPDATE
-     */
-    private void updateOrderInfo() {
-        displayOrderList();
-        String orderCode = in.getString("Nhập mã đơn cần cập nhật: ");
-        Order o = orderList.findOrder(orderCode);
-        if (o == null) {
-            System.out.println("Không tìm thấy đơn hàng!");
-            return;
-        }
-
-        // Không cho sửa nếu đã đến (hoặc qua) ngày tổ chức tiệc
-
-
-        String province = in.inputAndLoop("Tỉnh/thành mới: ", OrderValidation.PROVINCE_VALID, true);
-        int numOfTables = in.getInt("Số bàn mới: ", OrderValidation.NUM_TABLES_VALID);
-
-        // Nhập ngày giờ tổ chức mới, phải sau hôm nay
-        Date newDate = null;
-        while (newDate == null) {
-            String dateStr = in.inputAndLoop("Ngày giờ tổ chức mới (dd/MM/yyyy): ",
-                    OrderValidation.DATE_VALID, true);
-            try {
-                Date d = dateFormat.parse(dateStr);
-                if (toLocalDate(d).isAfter(LocalDate.now())) {
-                    newDate = d;
-                } else if (!toLocalDate(o.getEventDate()).isAfter(LocalDate.now())) {
-                    System.out.println("Không thể cập nhật: đơn đã đến/qua ngày tổ chức ("
-                            + dateFormat.format(o.getEventDate()) + ")!");
-                    return;
-                }
-                else {
-                    System.out.println("Ngày tổ chức mới phải sau ngày hôm nay!");
-                }
-            } catch (ParseException e) {
-                System.out.println("Ngày không hợp lệ!");
-            }
-        }
-
-        SetMenu newMenu = null;
-        String changeMenu = in.getString("Đổi set menu? (y/n): ");
-        if (changeMenu.equalsIgnoreCase("y")) {
-            displayFeastMenus();
-            String menuID = in.getString("Nhập mã set menu mới: ");
-            newMenu = setMenuList.findByID(menuID);
-            if (newMenu == null) {
-                System.out.println("Set menu không tồn tại!");
-                return; // chưa sửa gì vào o
-            }
-        }
-
-        // Mọi thứ hợp lệ -> mới áp dụng thay đổi
-        o.setProvince(province);
-        o.setNumOfTables(numOfTables);
-        o.setEventDate(newDate);
-        if (newMenu != null) o.setMenuID(newMenu);
-
-        boolean ok = orderList.updateOrder(o);
-        System.out.println(ok ? "Cập nhật thành công!" : "Cập nhật thất bại!");
     }
 
     /**
      * DISPLAY
      */
     private void displayOrderList() {
-        printList("--- Danh sách đơn hàng ---", orderList.getAllOrders(), "(Trống)");
+        printList("--- Order list ---", orderList.getAllOrders(), "(Empty)");
     }
 
     private void displayInvoices() {
         List<Order> orders = orderList.getAllOrders();
         if (orders.isEmpty()) {
-            System.out.println("(Chưa có đơn hàng nào)");
+            System.out.println("(No orders yet)");
             return;
         }
 
-        System.out.println("--- Danh sách hóa đơn ---");
+        System.out.println("--- Invoice list ---");
         System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6s| %-11s| %15s%n",
-                "Mã đơn", "Mã KH", "Tên KH", "Menu", "Số bàn", "Ngày", "Thành tiền");
+                "Order Code", "Cus ID", "Customer Name", "Menu", "Tables", "Date", "Total");
 
         for (Order o : orders) {
             System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6d| %-11s| %,15.0f%n",
@@ -328,84 +240,158 @@ public class Menu {
                     orderList.calcOrderTotal(o));
         }
 
-        System.out.printf("%nTổng doanh thu (%d đơn): %,.0f VNĐ%n",
+        System.out.printf("%nTotal revenue (%d orders): %,.0f VND%n",
                 orders.size(), orderList.getTotalRevenue());
+    }
+
+    private void displayCusList() {
+        List<Customer> customers = customerList.getAllCustomers();
+        if (customers.isEmpty()) {
+            System.out.println("(Empty)");
+        } else {
+            printCustomerTable(customers);
+        }
+    }
+
+    private void displayFeastMenus() {
+        printList("--- Set menu list ---", setMenuList.getAllSetMenus(), "No set menus available!");
     }
 
 
     /**
-     * PRINT TABLE
+     * ORDER
      */
-    private void printCustomerTable(List<Customer> customers) {
-        System.out.println("Customers information:");
-        System.out.println(LINE);
-        System.out.printf("%-6s| %-26s| %-12s| %s%n", "Code", "Customer Name", "Phone", "Email");
-        System.out.println(LINE);
-        for (Customer c : customers) {
-            System.out.printf("%-6s| %-26s| %-12s| %s%n",
-                    c.getId(), formatName(c.getName()), c.getPhone(), c.getEmail());
+
+    private void findOrderMore10(){
+        List<Order> results = orderList.findTableMost10();
+        System.out.println("------List order more 10 table------");
+        printInvoiceTable(results);
+    }
+    private void placeOrder() {
+        String customerID = in.inputAndLoop("Enter customer ID: ", CusValidation.CUS_ID_VALID, true);
+        Customer customer = customerList.findCustomer(customerID);
+        if (customer == null) {
+            System.out.println("Customer does not exist!");
+            return;
         }
-        System.out.println(LINE);
+
+        displayFeastMenus();
+        String menuID = in.getString("Enter the set menu ID to order: ");
+        SetMenu menu = setMenuList.findByID(menuID);
+        if (menu == null) {
+            System.out.println("Set menu does not exist!");
+            return;
+        }
+
+        int numOfTables = in.getInt("Enter number of tables: ", OrderValidation.NUM_TABLES_VALID);
+
+        Date eventDate;
+        String dateStr = in.inputAndLoop("Enter event date (dd/MM/yyyy): ", OrderValidation.DATE_VALID, true);
+        try {
+            eventDate = dateFormat.parse(dateStr);
+        } catch (ParseException e) {
+            System.out.println("Invalid date!");
+            return;
+        }
+
+        Order order = new Order(customer, menu, numOfTables, eventDate);
+
+        boolean ok = orderList.addOrder(order);
+        if (ok) {
+            double total = menu.getPrice() * numOfTables;
+            System.out.printf("Order placed successfully! Order code: %s - Total: %,.0f VND%n", order.getOrderCode(), total);
+        } else {
+            System.out.println("Failed to place order!");
+        }
     }
 
-    private void printInvoiceTable(List<Order> orders) {
-        System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6s| %-16s| %15s%n",
-                "Mã đơn", "Mã KH", "Tên KH", "Menu", "Số bàn", "Ngày", "Thành tiền");
-
-        for (Order o : orders) {
-            System.out.printf("%-15s| %-6s| %-25s| %-6s| %-6d| %-16s| %,15.0f%n",
-                    o.getOrderCode(),
-                    o.getCustomerID().getId(),
-                    o.getCustomerID().getName(),
-                    o.getMenuID().getMenuID(),
-                    o.getNumOfTables(),
-                    dateFormat.format(o.getEventDate()),
-                    orderList.calcOrderTotal(o));
+    /**
+     * UPDATE
+     */
+    private void updateOrderInfo() {
+        displayOrderList();
+        String orderCode = in.getString("Enter order code to update: ");
+        Order o = orderList.findOrder(orderCode);
+        if (o == null) {
+            System.out.println("Order not found!");
+            return;
         }
-    }
 
+        // Không cho sửa nếu đã đến (hoặc qua) ngày tổ chức tiệc
+        int numOfTables = in.getInt("New number of tables: ", OrderValidation.NUM_TABLES_VALID);
+
+        // Nhập ngày giờ tổ chức mới, phải sau hôm nay
+        Date newDate = null;
+        while (newDate == null) {
+            String dateStr = in.inputAndLoop("New event date (dd/MM/yyyy): ",
+                    OrderValidation.DATE_VALID, true);
+            try {
+                Date d = dateFormat.parse(dateStr);
+                if (toLocalDate(d).isAfter(LocalDate.now())) {
+                    newDate = d;
+                } else if (!toLocalDate(o.getEventDate()).isAfter(LocalDate.now())) {
+                    System.out.println("Cannot update: the event date has been reached or passed ("
+                            + dateFormat.format(o.getEventDate()) + ")!");
+                    return;
+                }
+                else {
+                    System.out.println("The new event date must be after today!");
+                }
+            } catch (ParseException e) {
+                System.out.println("Invalid date!");
+            }
+        }
+
+        SetMenu newMenu = null;
+        String changeMenu = in.getString("Change set menu? (y/n): ");
+        if (changeMenu.equalsIgnoreCase("y")) {
+            displayFeastMenus();
+            String menuID = in.getString("Enter new set menu ID: ");
+            newMenu = setMenuList.findByID(menuID);
+            if (newMenu == null) {
+                System.out.println("Set menu does not exist!");
+                return; // chưa sửa gì vào o
+            }
+        }
+
+        // Mọi thứ hợp lệ -> mới áp dụng thay đổi
+        o.setNumOfTables(numOfTables);
+        o.setEventDate(newDate);
+        if (newMenu != null) o.setMenuID(newMenu);
+
+        boolean ok = orderList.updateOrder(o);
+        System.out.println(ok ? "Update successful!" : "Update failed!");
+    }
 
 
     /**
      * SEARCH TABLE
      */
     private void searchInvoicesByCustomer() {
-        String name = in.getString("Nhập tên khách hàng cần tìm hóa đơn: ").trim();
-        if (name.isEmpty()) {
-            System.out.println("Tên không được để trống!");
+        String id = in.getString("Enter customer ID to search invoices: ").trim();
+        if (id.isEmpty()) {
+            System.out.println("Customer ID must not be empty!");
             return;
         }
 
-        List<Customer> customers = customerList.searchByName(name);
-        if (customers.isEmpty()) {
-            System.out.println("Không tìm thấy khách hàng nào!");
-            return;
-        }
-
-        // Gom hóa đơn của tất cả khách có tên khớp
-        List<Order> orders = new ArrayList<>();
-        for (Customer c : customers) {
-            orders.addAll(orderList.getOrdersByCustomer(c.getId()));
-        }
-
+        Customer customer = customerList.findCustomer(id);
+        // Gom hóa đơn của tất cả khách có tên khớp //
+        List<Order> orders = orderList.getOrdersByCustomer(customer.getId());
         if (orders.isEmpty()) {
-            System.out.println("Các khách hàng khớp tên \"" + name + "\" chưa có hóa đơn nào.");
+            System.out.println("No invoices found for customer \"" + id + "\".");
             return;
         }
 
-        System.out.println("--- Hóa đơn của khách hàng có tên chứa \"" + name + "\" ---");
+        System.out.println("--- Invoices of customer \"" + id + "\" ---");
         printInvoiceTable(orders);
 
         double total = 0;
         for (Order o : orders) {
             total += orderList.calcOrderTotal(o);
         }
-        System.out.printf("%nTổng tiền (%d đơn): %,.0f VNĐ%n", orders.size(), total);
+        System.out.printf("%nTotal amount (%d orders): %,.0f VND%n", orders.size(), total);
     }
 
-    /**
-     * FORMAT
-     */
     private String formatName(String fullName) {
         if (fullName == null) return "";
         String name = fullName.trim().replaceAll("\\s+", " ");
@@ -426,7 +412,7 @@ public class Menu {
         boolean customerOk = customerList.saveToFile();
         boolean orderOk = orderList.saveToFile();
         System.out.println(customerOk && orderOk
-                ? "Lưu dữ liệu thành công!"
-                : "Lưu dữ liệu thất bại!");
+                ? "Data saved successfully!"
+                : "Failed to save data!");
     }
 }

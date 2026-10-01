@@ -23,7 +23,7 @@ public class SetMenuDAO implements ISetMenuDAO {
         try {
             return fileIO.readFromFile();
         } catch (Exception e) {
-            System.out.println("Lỗi đọc file: " + e.getMessage());
+            System.out.println("File error: " + e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -39,7 +39,7 @@ public class SetMenuDAO implements ISetMenuDAO {
         try {
             return fileIO.saveToFile(list);
         } catch (Exception e) {
-            System.out.println("Lỗi ghi file: " + e.getMessage());
+            System.out.println("File error: " + e.getMessage());
             return false;
         }
     }

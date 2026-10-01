@@ -6,6 +6,7 @@ import Core.Entities.SetMenu;
 
 import Core.Interfaces.IOrderDAO;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import java.util.List;
@@ -110,6 +111,17 @@ public class OrderList {
         return orderDAO.findByCustomerID(customerID);
     }
 
+    public List<Order> findTableMost10(){
+        List<Order> orders = orderDAO.readAll();
+        List<Order> result = new ArrayList<>();
+        for (Order order : orders) {
+            if (order.getNumOfTables() > 10){
+                result.add(order);
+            }
+        }
+        return result;
+        }
+
     /**
      * Tính tổng doanh thu = giá SetMenu * số bàn, cộng dồn tất cả đơn hàng.
      */
@@ -121,6 +133,7 @@ public class OrderList {
                 .sum();
     }
 
+
     public double calcOrderTotal(Order o) {
         if (o == null || o.getMenuID() == null) return 0;
         return o.getMenuID().getPrice() * o.getNumOfTables();
@@ -130,7 +143,7 @@ public class OrderList {
      * CHECK
      */
 
-    public boolean isFutureDate(Date d) {
+    public  boolean isFutureDate(Date d) {
         return d != null && d.after(new Date());
     }
 
@@ -148,10 +161,22 @@ public class OrderList {
         return sdf.format(d1).equals(sdf.format(d2));
     }
 
-    public boolean isExist(String orderCode) {
+    public  boolean isExist(String orderCode) {
         return orderDAO.findByID(orderCode) != null;
     }
 
+
+
+    public int getMaxTable(){
+	List<Order> orders = orderDAO.readAll();
+	int max = 0;
+	for(int i = 0; i < orders.size(); i++){
+		if(orders.get(i).getNumOfTables()> max){
+			max = orders.get(i).getNumOfTables();
+		}
+	}
+	return max;
+    }
     /**
      * SAVE
      */
@@ -159,4 +184,6 @@ public class OrderList {
     public boolean saveToFile() {
         return orderDAO.save();
     }
+
+
 }

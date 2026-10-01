@@ -3,11 +3,10 @@ package BusinessObject;
 import Core.Entities.Customer;
 import Core.Interfaces.ICustomerDAO;
 
-import java.util.Comparator;
+
 import java.util.List;
-import java.util.stream.Collectors;
-import java.text.Collator;
-import java.util.Locale;
+import java.util.ArrayList;
+
 
 public class CustomerList {
 
@@ -27,11 +26,11 @@ public class CustomerList {
 
     public boolean addCustomer(Customer c) {
         if (c == null || isNullOrEmpty(c.getId()) || isNullOrEmpty(c.getName())) {
-            System.out.println("Thông tin khách hàng không hợp lệ!");
+            System.out.println("Invalid customer information!");
             return false;
         }
         if (isExist(c.getId())) {
-            System.out.println("Mã khách hàng đã tồn tại: " + c.getId());
+            System.out.println("Customer ID already exists: " + c.getId());
             return false;
         }
         return customerDAO.add(c);
@@ -39,7 +38,7 @@ public class CustomerList {
 
     public boolean updateCustomer(Customer c) {
         if (!isExist(c.getId())) {
-            System.out.println("Không tìm thấy khách hàng: " + c.getId());
+            System.out.println("Customer not found: " + c.getId());
             return false;
         }
         return customerDAO.update(c);
@@ -47,7 +46,7 @@ public class CustomerList {
 
     public boolean deleteCustomer(String id) {
         if (!isExist(id)) {
-            System.out.println("Không tìm thấy khách hàng để xóa: " + id);
+            System.out.println("Customer to delete not found: " + id);
             return false;
         }
         return customerDAO.delete(id);
@@ -61,31 +60,36 @@ public class CustomerList {
      * SEARCH
      */
 
+
     public Customer findCustomer(String id) {
         return customerDAO.findByID(id);
     }
 
-    public List<Customer> searchByName(String name) {
+
+    public List<Customer> findByName(String name) {
         return sortByName(customerDAO.findByName(name));
     }
 
-    private static String getGivenName(String fullName) {
+    private String getGivenName(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) return "";
         String[] parts = fullName.trim().split("\\s+");
         return parts[parts.length - 1];
     }
+
 
     /**
      * SORT
      */
 
     private List<Customer> sortByName(List<Customer> list) {
-        Collator collator = Collator.getInstance(new Locale("vi", "VN"));
-        return list.stream()
-                .sorted(Comparator.comparing(
-                        (Customer c) -> getGivenName(c.getName()),
-                        collator::compare))
-                .collect(Collectors.toList());
+        List<Customer> result = new ArrayList<>(list);
+
+        result.sort((c1, c2) ->
+                getGivenName(c1.getName())
+                        .compareTo(getGivenName(c2.getName()))
+        );
+
+        return result;
     }
 
     /**
@@ -100,6 +104,7 @@ public class CustomerList {
         return s == null || s.trim().isEmpty();
     }
 
+
     /**
      * SAVE TO FILE
      */
@@ -107,6 +112,5 @@ public class CustomerList {
     public boolean saveToFile() {
         return customerDAO.save();
     }
-
 
 }

@@ -23,7 +23,7 @@ public class CustomerDAO implements ICustomerDAO {
         try {
             return fileIO.readFromFile();
         } catch (Exception e) {
-            System.out.println("Lỗi đọc file: " + e.getMessage());
+            System.out.println("File error: " + e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -39,7 +39,7 @@ public class CustomerDAO implements ICustomerDAO {
         try {
             return fileIO.saveToFile(list);
         } catch (Exception e) {
-            System.out.println("Lỗi ghi file: " + e.getMessage());
+            System.out.println("File error: " + e.getMessage());
             return false;
         }
     }
@@ -73,6 +73,17 @@ public class CustomerDAO implements ICustomerDAO {
     @Override
     public Customer findByID(String id) {
         return customerList.stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null);
+    }
+    public List<Customer> searchByPhone(String phonePrefix) {
+        List<Customer> result = new ArrayList<>();
+
+        for (Customer customer : customerList) {
+            if (customer.getPhone().startsWith(phonePrefix)) {
+                result.add(customer);
+            }
+        }
+
+        return result;
     }
 
     @Override
